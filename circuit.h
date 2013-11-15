@@ -98,12 +98,19 @@ class Circuit
 
 		// add for 579
 		// find an objective
-		void objective();
+		bool objective();
    
 		// add for 579
-		// backtrace a node to find next PI to assign a value
-		void backtrace(
-		
+		// backtrace current objective to find next PI to assign a value
+		Node* backtrace();
+		Node* backtrace_help(Node *cur_node, char cur_val);
+
+		// add for 579
+		// find the reverse of a val
+		char invert_val(char val);
+
+		// add for 579
+		void Imply(Node *cur_node);		
 };
 
 #endif

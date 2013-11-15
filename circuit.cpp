@@ -512,19 +512,20 @@ char Circuit::computeNode(Node* node)
 
 bool Circuit::objective() {
 	// if fault location unassigned
-	if (fault.first->getValue() = 'u') {
+	if (fault.first->getValue() == 'X') {
 		cur_obj = fault;
 		return true;
 	}
 	
+	//TODO: recheck the logic here, especially for the NOT gate
 	for (int i = 0; i < d_frontier.size(); i++) {
 		Node *d_front = d_frontier[i];
-		for (int j = 0; j < d_front->getFanout.size(); j++) {
-			Node *prop_gate = d_front->getFanout[j];
-			if (prop_gate->getValue() = 'u') {
-				for (int k = 0; k < prop_gate->getFanin.size(); k++) {
-					Node *obj_sig = prop_gate->getFanin[k];
-					if (obj_sig->getValue = 'u') {
+		for (int j = 0; j < d_front->getFanout().size(); j++) {
+			Node *prop_gate = d_front->getFanout()[j];
+			if (prop_gate->getValue() == 'X') {
+				for (int k = 0; k < prop_gate->getFanin().size(); k++) {
+					Node *obj_sig = prop_gate->getFanin()[k];
+					if (obj_sig->getValue() == 'X') {
 						cur_obj = (obj_sig, prop_gate->non_ctr_val());
 						return true;
 					}
@@ -535,4 +536,79 @@ bool Circuit::objective() {
 
 	return false;
 }
+
+Node* backtrace() {
+	return backtrace_help(cur_obj.first, cur_obj.second);
+}
+
+Node* backtrace_help(Node *cur_node, char cur_val) {
+	if (cur_node->getType() == PRIMARY_INPUT) {
+		cur_node->setValue(cur_val);
+		return cur_node;
+	}
+	else {
+		char next_val;
+		gateType cur_gate = cur_node->getGateType();
+		//if G is NOR/NOT/NAND, value is opposite
+		if (cur_gate == AND || cur_gate == OR) {
+			next_val = cur_val;
+		}
+		else {
+			next_val = invert_val(cur_val);
+		}
+		//find an unassigned input, here I ignore controllbility mentioned
+		//in the paper, should be fine, correct?
+		//TODO: .lev file has controllability value which can be used
+		for (int i = 0; i < cur_node->getFanin.size(); i++) {
+			Node *next_node = cur_node->getFanin[k];
+			if (next_node->getValue == 'X') {				
+				return backtrace_help(next_node, next_val);
+			}
+		}
+		//Assume the for loop above must find one unassigned input, or this node		//will not be selected, correct?
+	}
+	return nullptr;
+}
+
+char invert_val(char val) {
+	char inv_val;
+	switch(val) {
+		case	'0'	: inv_val = '1';	break;
+		case	'1'	: inv_val = '0';	break;
+		case	'X'	: inv_val = 'X';	break;
+		case	'D'	: inv_val = 'B';	break;
+		case	'B'	: inv_val = 'D';	break;
+		case	'G'	: inv_val = 'J';	break;
+		case	'J'	: inv_val = 'G';	break;
+		case	'F'	: inv_val = 'L';	break;
+		case	'L'	: inv_val = 'F';	break;
+		default		:	inv_val = 'X';	break;
+	}
+	return inv_val;
+}
+
+void Imply(Node *cur_node) {
+	//assume new value of a node will not lead a contradiction when imply
+	//correct?
+	Node *next_node;
+	vector<Node*> fanout = cur_node->getFanout();
+	int fanout_size = fanout.size();
+	for (int i = 0; i < fanout_size; i++) {
+		next_node = fanout[i];
+		if (next_node->getValue() == 'X') {
+			string next_node_input = next_node->getInput();
+			char next_node_val = next_node->tt.evaluate(&next_node_input);
+			if (next_node_val != 'X') {
+				next_node->setValue(next_node_val);
+				Imply(next_node);
+			}
+		}
+	}
+}
+
+
+
+
+
+
 		
