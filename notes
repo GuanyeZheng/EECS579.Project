@@ -15,3 +15,5 @@ Node:
 2. add a private variable: gatetype, which is a enum indicating which type of gate is for a node (AND, OR, NOT, NAND, NOR);
 
 3. add fanout list and getFanout(), addFanout(), getNumFanout(), clearFanout().
+
+

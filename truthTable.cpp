@@ -1,5 +1,6 @@
 #include "truthTable.h"
 
+using namespace std;
 
 
 
@@ -28,7 +29,7 @@ int TruthTable::setGateType(gateType g_t)
 
 
 bool TruthTable::setTruthTable_in(){
-  if(gateType == NOT){
+  if (typeGate == NOT){
     truthTable_in.push_back("0");
     truthTable_in.push_back("1");
     truthTable_in.push_back("X");
@@ -90,7 +91,7 @@ bool TruthTable::setTruthTable_in(){
 }
 bool TruthTable::setTruthTable()
 {
-  if (typeGate == AND)
+  if (typeGate == AND||typeGate == NAND )
   {
     truthTable_out.push_back('0');  //00
     truthTable_out.push_back('0');  //01
@@ -137,7 +138,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('F');  //ff
     truthTable_out.push_back('F');  //fl
     truthTable_out.push_back('L');  //ll
-  }
+  }/*
   else if(typeGate == NAND)
   {
     truthTable_out.push_back('1');  //00
@@ -186,7 +187,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('L');  //fl
     truthTable_out.push_back('F');  //ll
 
-  }else if(typeGate == OR)
+  }*/else if(typeGate == OR || typeGate == NOR)
   {
     truthTable_out.push_back('0');  //00
     truthTable_out.push_back('1');  //01
@@ -234,7 +235,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('L');  //fl
     truthTable_out.push_back('L');  //ll
 
-  }  
+  }/*  
   else if(typeGate == NOR)
   {
     truthTable_out.push_back('1');  //00
@@ -282,18 +283,18 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('L');  //ff
     truthTable_out.push_back('F');  //fl
     truthTable_out.push_back('F');  //ll
-  }
+  }*/
   else if (typeGate == NOT)
   {
-    truthTable_out.push_back('1') //0
-    truthTable_out.push_back('0') //1
-    truthTable_out.push_back('X') //x
-    truthTable_out.push_back('B') //d
-    truthTable_out.push_back('D') //b
-    truthTable_out.push_back('J') //g
-    truthTable_out.push_back('G') //j
-    truthTable_out.push_back('L') //f
-    truthTable_out.push_back('F') //l
+    truthTable_out.push_back('1'); //0
+    truthTable_out.push_back('0'); //1
+    truthTable_out.push_back('X'); //x
+    truthTable_out.push_back('B'); //d
+    truthTable_out.push_back('D'); //b
+    truthTable_out.push_back('J'); //g
+    truthTable_out.push_back('G'); //j
+    truthTable_out.push_back('L'); //f
+    truthTable_out.push_back('F'); //l
   }
   else {
     return false;
@@ -669,7 +670,7 @@ int TruthTable::clear()
   return 0;
 }
 
-char findOutput(string input)
+char TruthTable::findOutput(string input)
 {
   for (int i = 0; i < truthTable_in.size() ; i++)
   {
@@ -755,7 +756,7 @@ char findOutput(string input)
 
 }
 
-char TruthTable::evaluate(const string &input)
+char TruthTable::evaluate_helper(const string &input)
 {
   if (input.length() != numVars)
   {
@@ -766,7 +767,7 @@ char TruthTable::evaluate(const string &input)
   
   if (input.length() == 2 || input.length() == 1)
   {
-    return findOutput(input); //it will return the 
+    return TruthTable::findOutput(input); //it will return the 
   } 
   else if (input.length()%2 == 0)
   {
@@ -776,24 +777,25 @@ char TruthTable::evaluate(const string &input)
     char halfReturn1, halfReturn2;
     halfInput1 = input.substr(0,halfLength-1);
     halfInput2 = input.substr(halfLength,input.length()-1);
-    halfReturn1 = TruthTable::evaluate(halfInput1);
-    halfReturn2 = TruthTable::evaluate(halfInput2);
+    halfReturn1 = TruthTable::evaluate_helper(halfInput1);
+    halfReturn2 = TruthTable::evaluate_helper(halfInput2);
     string newInput;
     newInput.push_back(halfReturn1);
     newInput.push_back(halfReturn2);
-    return TruthTable::evaluate(newInput);
+    return TruthTable::evaluate_helper(newInput);
   }
   else
   {
-    string halfInput1, halfInput2;
-    char halfReturn1, halfReturn2;
+    string halfInput1;
+    char   halfInput2; //last character
+    char halfReturn; //for return
     halfInput1 = input.substr(0,input.length()-2);
-    halfInput2 = input.substr(input.length()-1);
-    halfReturn1 = TruthTable::evaluate(halfInput1);
+    halfInput2 = input[input.length()-1];
+    halfReturn = TruthTable::evaluate_helper(halfInput1);
     string newInput;
-    newInput.push_back(halfReturn1);
+    newInput.push_back(halfReturn);
     newInput.push_back(halfInput2);
-    return TruthTable::evaluate(newInput);
+    return TruthTable::evaluate_helper(newInput);
   }
   
   /*
@@ -844,4 +846,28 @@ char TruthTable::evaluate(const string &input)
   // no match, output 0
   return '0';
   */
+}
+
+char TruthTable::evaluate(const string &input){
+  char result = evaluate_helper(input);
+  if( typeGate == NAND || typeGate == NOR )
+  {
+    switch (result)
+    {
+      case '0': result = '1'; break;
+      case '1': result = '0'; break;
+      case 'X': result = 'X'; break;
+      case 'D': result = 'B'; break;
+      case 'B': result = 'D'; break;
+      case 'G': result = 'J'; break;
+      case 'J': result = 'G'; break;
+      case 'F': result = 'L'; break;
+      case 'L': result = 'F'; break;
+      default:   
+          cout<<"ERROR IN THE RETURN Value" << result << endl;
+          return -1 ;
+    }
+  
+  }
+  return result;
 }
