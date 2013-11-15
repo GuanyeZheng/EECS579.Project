@@ -9,3 +9,6 @@ Node:
 1. add non_ctr_val(), which returns a non controlling value of a gate
 
 2. add a private variable: gatetype, which is a enum indicating which type of gate is for a node (AND, OR, NOT);
+
+//I think we have five type? AND OR NOT NAND NOR  by tt
+

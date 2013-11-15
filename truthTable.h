@@ -4,19 +4,20 @@
 #include <vector>
 #include <string>
 #include <iostream>
-
+/*
 using std::vector;
 using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
-
+*/
+using namespace std;
 class Node;
 class Circuit;
 
 //Defne possible values inside truth table
 enum truthType {ZERO, ONE, DC, D, D_bar, G0,G1,F0,F1};  //add for 579
-
+enum gateType {AND, OR, NOT, NAND, NOR};
 class TruthTable
 {
   friend class Node;
@@ -38,7 +39,7 @@ class TruthTable
     
     TruthTable(unsigned nV): numVars(nV) {}
     
-    TruthTable(unsigned nV, gateType g, const vector<string> &t_in, const vector<string> &t_out ): numVars(0),typeGate(g),truthTable_in(t_in),truthTable_out(t_out) {} 
+    //TruthTable(unsigned nV, gateType g, const vector<string> &t_in, const vector<string> &t_out ): numVars(0),typeGate(g),truthTable_in(t_in),truthTable_out(t_out) {} 
     
     // destructor
     ~TruthTable() {};
@@ -48,7 +49,7 @@ class TruthTable
    
     //set the gateType;
     int setGateType(gateType g_t); 
-    
+    char findOutput(string input);//just calculate 2-input gate output;
 
     bool setTruthTable_in();
     bool setTruthTable();
@@ -71,6 +72,7 @@ class TruthTable
 
  // evaluate the result of a node by comparing the input to the truth table entry by entry
     char evaluate(const string &input);
+    char evaluate_helper(const string &input);//helper function for evaluate ;
 
 };
 
