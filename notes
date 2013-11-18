@@ -5,10 +5,15 @@ Circuit:
 
 3. add d_frontier(vector<node*>)
 
+4. add a function backtrace(), return the node pointer to PI that being found, set and only set the value of primary input
+
+5. add a function Imply()
+
 Node:
 1. add non_ctr_val(), which returns a non controlling value of a gate
 
-2. add a private variable: gatetype, which is a enum indicating which type of gate is for a node (AND, OR, NOT);
+2. add a private variable: gatetype, which is a enum indicating which type of gate is for a node (AND, OR, NOT, NAND, NOR);
 
-//I think we have five type? AND OR NOT NAND NOR  by tt
+3. add fanout list and getFanout(), addFanout(), getNumFanout(), clearFanout().
+
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -11,7 +12,7 @@ using namespace std;
 
 // define node type
 enum nodeType {PRIMARY_INPUT, PRIMARY_OUTPUT, INTERNAL, ZERO_NODE, ONE_NODE};
-enum gateType {AND, OR, NOT};
+enum gateType {AND, OR, NOT, NAND, NOR};
 
 // define value type
 class Circuit;
@@ -42,9 +43,9 @@ class Node
     
   public:
     // constructors
-    Node():type(INTERNAL) {}
+    Node():type(INTERNAL), value('X') {}
     
-    Node(const string &nodeName):name(nodeName), type(INTERNAL) {}
+    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X') {}
     
     // destructor
     ~Node() {};
@@ -56,7 +57,12 @@ class Node
     // returns and sets the type of the node
     nodeType getType() { return type; }
     int setType(nodeType t) { type = t; return 0; }
-    
+
+		// add for 579
+    // returns and sets the type of the node
+    gateType getGateType() { return gate; }
+    int setGateType(gateType gt) { gate = gt; return 0; }
+
     // returns the vector of fanin nodes
     vector<Node*> getFanin() { return fanin; }
 
@@ -135,12 +141,25 @@ class Node
 		char non_ctr_val() {
 			char value;
 			switch(gate) {
-				case	AND	: char = '1';	break;
-				case	OR	:	char = '0';	break;
-				default		:	char = '0';	break;
+				case	AND		: value = '1';	break;
+				case	OR		:	value = '0';	break;
+				case	NAND	:	value = '1';	break;
+				case	NOR		: value = '0';	break;
+				default			:	value = 'X';	break;
 			}
 			return value;
-		}			
+		}	
+
+		//add for 579
+		//get the input and return as a string
+		string getInput() {
+			stringstream ss;
+			int fanin_size = fanin.size();
+			for (i = 0; i < fanin_size; i++) {
+				ss << fanin[i]->getValue();
+			}
+			return ss.str();
+		}
 };
 
 #endif
