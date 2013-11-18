@@ -24,9 +24,17 @@ class Node
     string name;
     nodeType type;
 		gateType gate;
-    vector<Node*> fanin;
+    
+    int level;
+    int numFanin;
+    vector<Node*> fanin_c0; //inputs in order of decreasing C0;
+    vector<Node*> fanin_c1;//inputs in order of decreasing C1;
+    int numFanout;
+    vector<Node*> fanout;//successors in order of decreasing obs. value;
+    int obs_value;//observability value;
+    vector<int> control_value;//controllability values C0 and C1;
 		// add for 579
-		vector<Node*> fanout;
+
     TruthTable tt;
     // add two private variables in support of topoSort and simulate
     bool marked;

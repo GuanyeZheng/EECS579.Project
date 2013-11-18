@@ -135,6 +135,14 @@ int Circuit::readBLIF(const string &filename)
   clear();
   
   string line;
+
+  getline(inFile,line);
+  string fistLine, secondLine;
+  line >> firstLine; 
+  int num_gate = atoi(firstLine.c_str()); //number of gates in the circuit;
+  getline(inFile,line); // to pass the second line, which is of no use.
+
+  //start fetch from the third line;
   while (getline(inFile, line))
   {
 //    cout << "processing line: " << line << endl;
@@ -144,7 +152,7 @@ int Circuit::readBLIF(const string &filename)
     
     sstr << line;
     string word;
-    vector<string> words;
+    vector<string> words; //modified to a vector of string type;
     
     // parse each line
     while (sstr >> word)
@@ -155,130 +163,78 @@ int Circuit::readBLIF(const string &filename)
     // parse non-empty lines only
     if (!words.empty())
     {
-      // skip any comments
-      if (words[0].find("#") != string::npos) continue;
-      
-      // parse model name
-      if (words[0] == ".model")
-      {
-        for (unsigned i = 1; i < words.size(); ++i)
-          name += words[i];
+      //words[0] node name
+      Node* node = findNode(words[0]);
+      if (node == !NULL){
+        Node* levelNode = createNode(words[0]);
       }
-      
-      // parse primary inputs
-      else if (words[0] == ".inputs")
-      {
-        for (unsigned i = 1; i < words.size(); ++i)
-        {
-          Node* inNode = createNode(words[i]);
-          // node already exists
-          if (inNode == NULL)
-          {
-            cout << "ERROR in readBLIF() (inputs) - node " << words[i] << " already exists.";
-            return -1;
-          }
-          inNode->type = PRIMARY_INPUT;
-        }
+      else {
+        Node* levelNode = node; 
       }
-      
-      // parse primary outputs
-      else if (words[0] == ".outputs")
+      //words[1] gate type node type;
+      levelNode.type =  INTERNAL;//  is this correct?
+      switch(words[1])
       {
-        for (unsigned i = 1; i < words.size(); ++i)
-        {
-          Node* outNode = createNode(words[i]);
-          // node already exists
-          if (outNode == NULL)
-          {
-            cout << "ERROR in readBLIF() (outputs) - node " << words[i] << " already exists.";
-            return -1;
-          }
-          outNode->type = PRIMARY_OUTPUT;
-        }
+        case "1": levelNode.type = PRIMARY_INPUT; break;
+        case "2": levelNode.type = PRIMARY_OUTPUT; break;
+        case "6": levelNode.gate = "AND"; break;
+        case "6": levelNode.gate = "AND"; break;
+        case "7": levelNode.gate = "NAND"; break;
+        case "8": levelNode.gate = "OR"; break;
+        case "9": levelNode.gate = "NOR"; break;
+        case "10": levelNode.gate = "NOT"; break;
       }
+
       
-      // parse standard logic node
-      else if (words[0] == ".names" && words.size() > 2)
+      //word[2] level;
+      levelNode.level = atoi(words[2].c_str());
+      
+      //word[3] numFanin;
+      levelNode.numfanin =  atoi(words[3].c_str());
+      //word[4] faninlist...
+      int count = 4;
+      int j;
+      for (j = 0; j<levelNode.numFanin;++j)
       {
-        // find/create output node
-        Node* outNode = findNode(words[words.size()-1]);
-        if (outNode == NULL) outNode = createNode(words[words.size()-1]);
-        else
-        {
-          outNode->clearTT();
-          outNode->clearFanin();
-        }
+        Node* node = findNode(words[count+j]);
+        if (node == NULL) Node* node_fanin_c0 = createNode(words[count+j]);
+        else Node* node_fanin_c0 = node;
         
-        // find/create input nodes
-        for (unsigned i = 1; i < words.size()-1; ++i)
-        {
-          Node* inNode = findNode(words[i]);
-          if (inNode == NULL) inNode = createNode(words[i]);
-          outNode->addFanin(inNode);
-        }
-        outNode->tt.setNumVars(words.size()-2);
-        
-        // read truth table entries
-        char c;
-        do
-        {
-          string entry, result;
-          inFile >> entry >> result;
-//          cout << entry << " " << result << endl;
-          if (entry.length() != outNode->getNumFanin())
-          {
-            cout << "ERROR in readBLIF() - number of input entries "
-                 << "does not match number of fanin nodes" << endl;
-            cout << "entry: " << entry << " ; vs numFanins = " << outNode->getNumFanin() << endl;
-            return -1;
-          }
-          // only parse '1' result
-          if (result == "1")
-          {
-            if (outNode->tt.addEntry(entry))
-            {
-              cout << "ERROR in readBLIF() - cannot add entry " << entry
-                   << " to truth table." << endl;
-              return -1;
-            }
-          }
-          getline(inFile, result);
-          c = inFile.peek(); // look at next character
-//          cout << "c: " << c << endl;
-        } while (c == '1' || c == '0' || c == '-');
+        levelNode.fanin_c0.push_back(node_fanin_c0);
       }
-      
-      // parse logic ZERO and ONE nodes
-      else if (words[0] == ".names" && words.size() == 2)
-      {
-        Node* outNode = findNode(words[1]);
-        if (outNode == NULL) outNode = createNode(words[1]);
-        else
-        {
-          outNode->clearTT();
-          outNode->clearFanin();
-        }
-        // if next line is '1', then logic 1
-        if (inFile.peek() == '1')
-        {
-          outNode->type = ONE_NODE;
-          inFile.get();  // throw away '1'
-        }
-        else
-        {
-          outNode->type = ZERO_NODE;
-        }
+      count = count + j;//6
+
+      //words[4+numFanin]
+      for (j = 0; j<levelNode.numFanin; ++j)
+      { 
+        string name = words[count+j];
+        Node*node = findNode(name);
+        if (node == NULL) Node * node_fanin_c1 = createNode(name);
+        else Node* node_fanin_c1 = node;
+        levelNode.fanin_c1.push_back(node_fanin_c1);
       }
-      
-      // parse end of file
-      else if (words[0] == ".end") break;
-      
-      // error
-      else
+
+      count = count + j;//8
+      //words[4+numFanin*2]
+      levelNode.numFanout =  atoi(words[count].c_str());
+      count = count + 1;//9
+      //words[4+numFanin*2+1,4+numFanin*2+1+numFanout];
+      for (j = 0; j< levelNode.numFanout; ++j)
       {
-        cout << "ERROR in readBLIF() - invalid line " << words[0] << endl;
-        cout << "Possibly wrong format?" << endl;
-        return -1;
+        string name = words[count+j];
+        Node*node = findNode(name);
+        if (node == NULL) Node * node_fanout = createNode(name);
+        else Node* node_fanout = node;
+        levelNode.fanout.push_back(node_fanout);
+      }
+      count = count + j;//11
+      
+      //words[count] oberservabitlity
+      levelNode.obs_value = atoi(words[count].c_str());
+      count = count + 2;//13
+      for (j = 0; j < levelNode.numFanin; ++j)
+      {
+        levelNode.control_value.push_back(atoi(words[count+j].c_str()));
       }
     }
   }
