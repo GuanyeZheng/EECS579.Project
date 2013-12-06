@@ -12,7 +12,7 @@ using namespace std;
 
 // define node type
 enum nodeType {PRIMARY_INPUT, PRIMARY_OUTPUT, INTERNAL, ZERO_NODE, ONE_NODE};
-enum gateType {AND, OR, NOT, NAND, NOR};
+//enum gateType {AND, OR, NOT, NAND, NOR};
 
 // define value type
 class Circuit;
@@ -20,14 +20,14 @@ class Circuit;
 class Node
 {
   friend class Circuit;
-  
+
   private:
     string name;
     nodeType type;
 		gateType gate;
     
     int level;
-    int numFanin;
+    unsigned int numFanin;
     vector<Node*> fanin_c0; //inputs in order of decreasing C0;
     vector<Node*> fanin_c1;//inputs in order of decreasing C1;
     int numFanout;
@@ -54,7 +54,7 @@ class Node
     string getName() { return name; }
     int setName(const string &n) { name = n; return 0; }
     
-    // returns and sets the type of the node
+    // returns and sets the type of the node 
     nodeType getType() { return type; }
     int setType(nodeType t) { type = t; return 0; }
 
@@ -63,36 +63,37 @@ class Node
     gateType getGateType() { return gate; }
     int setGateType(gateType gt) { gate = gt; return 0; }
 
-    // returns the vector of fanin nodes
-    vector<Node*> getFanin() { return fanin; }
+    // returns the vector of fanin nodes in decresing C0;
+    vector<Node*> getFanin() { return fanin_c0;}
 
 		// add for 579
 		// returns the vector of fainout nodes
 		vector<Node*> getFanout() { return fanout; }
     
     // adds a fanin node
-    int addFanin(Node* &inNode) { fanin.push_back(inNode); return 0; }
+    //int addFanin(Node* &inNode) { fanin.push_back(inNode); return 0; }
 
 		// add for 579
 		// adds a fanout node
-		int addFanout(Node* &inNode) { fanout.push_back(inNode); return 0; }
+		//int addFanout(Node* &inNode) { fanout.push_back(inNode); return 0; }
     
     // returns the number of fanin nodes (variables)
-    unsigned getNumFanin() { return fanin.size(); }
+    unsigned getNumFanin() { return numFanin; }
 
 		// add for 579
 		// returns the number of fanout nodes (variables)
-		unsigned getNumFanout() { return fanout.size(); }
+		//unsigned getNumFanout() { return fanout.size(); }
     
     // clear functions
     int clearName() { name = ""; return 0; }
-    int clearFanin() { fanin.clear(); return 0; }
+    int clearFanin() { fanin_c0.clear(); return 0; }
 		// add for 579
 		int clearFanout() { fanout.clear(); return 0; }
     int clearTT() { tt.clear(); return 0; }
     int clear() { name = ""; clearFanin(); clearFanout(); clearTT(); return 0; }
     
-    // prints node information
+    // prints node informationnode.h:112: error: ‘fanin’ was not declared in this scope
+
     int print()
     {
       cout << "Name: " << name << " [TYPE = ";
@@ -109,10 +110,10 @@ class Node
       if (type == PRIMARY_OUTPUT || type == INTERNAL)
       {
         cout << "Fanin nodes: ";
-        for (unsigned i = 0; i < fanin.size(); ++i)
-          cout << fanin[i]->name << " ";
+        for (unsigned i = 0; i < numFanin; ++i)
+          cout << fanin_c0[i]->name << " ";
         cout << endl;
-        tt.print();
+        //tt.print();
       }
 
 			// add for 579
@@ -128,6 +129,9 @@ class Node
     }
     
     // get, set and reset function of mark, which indicates if a node has been visited (when topoSort) or computed (when simulate)
+    // 
+    //
+    
     bool getMark() { return marked; }
     int setMark() { marked = true; return 0; }
     int resetMark() { marked = false; return 0; }
@@ -154,13 +158,14 @@ class Node
 		//get the input and return as a string
 		string getInput() {
 			stringstream ss;
-			int fanin_size = fanin.size();
-			for (i = 0; i < fanin_size; i++) {
-				ss << fanin[i]->getValue();
+			int fanin_size = numFanin;
+			for (unsigned i = 0; i < fanin_size; i++) {
+				ss << fanin_c0[i]->getValue();
 			}
 			return ss.str();
 		}
 };
+
 
 #endif
 

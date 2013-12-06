@@ -17,7 +17,7 @@ class Circuit;
 
 //Defne possible values inside truth table
 enum truthType {ZERO, ONE, DC, D, D_bar, G0,G1,F0,F1};  //add for 579
-enum gateType {AND, OR, NOT, NAND, NOR};
+enum gateType {AND, OR, NOT, NAND, NOR, PI, PO};
 class TruthTable
 {
   friend class Node;
