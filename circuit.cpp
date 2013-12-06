@@ -1,5 +1,5 @@
 #include "circuit.h"
-
+using namespace std;
 /******************Circuit Implementation********************/
 
 Circuit::~Circuit()
@@ -82,7 +82,7 @@ Node* Circuit::findNode(const string &nodeName)
 }
 
 Node* Circuit::createNode(const string &nodeName)
-{
+{  
   Node* newNode = findNode(nodeName);
   if (newNode == NULL)
   {
@@ -137,8 +137,8 @@ int Circuit::readBLIF(const string &filename)
   string line;
 
   getline(inFile,line);
-  string fistLine, secondLine;
-  line >> firstLine; 
+  string firstLine, secondLine;
+  firstLine = line; 
   int num_gate = atoi(firstLine.c_str()); //number of gates in the circuit;
   getline(inFile,line); // to pass the second line, which is of no use.
 
@@ -165,76 +165,92 @@ int Circuit::readBLIF(const string &filename)
     {
       //words[0] node name
       Node* node = findNode(words[0]);
-      if (node == !NULL){
-        Node* levelNode = createNode(words[0]);
+      Node* levelNode;
+      if (node == NULL){
+        levelNode = createNode(words[0]);
       }
       else {
-        Node* levelNode = node; 
+        levelNode = node; 
       }
       //words[1] gate type node type;
-      levelNode.type =  INTERNAL;//  is this correct?
-      switch(words[1])
+      int gateType_value = atoi((words[1].c_str()));
+      switch(gateType_value)
       {
-        case "1": levelNode.type = PRIMARY_INPUT; break;
-        case "2": levelNode.type = PRIMARY_OUTPUT; break;
-        case "6": levelNode.gate = "AND"; break;
-        case "6": levelNode.gate = "AND"; break;
-        case "7": levelNode.gate = "NAND"; break;
-        case "8": levelNode.gate = "OR"; break;
-        case "9": levelNode.gate = "NOR"; break;
-        case "10": levelNode.gate = "NOT"; break;
+        case 1: levelNode->gate = PI;break;
+        case 2: levelNode->gate = PO; break;
+        case 6: levelNode->gate = AND; break;
+        case 7: levelNode->gate = NAND;  break;
+        case 8: levelNode->gate = OR;   break;
+        case 9: levelNode->gate = NOR; break;
+        case 10: levelNode->gate = NOT; break;
+        default : 
+            cout << "ERROR: Gate type not recognized" << endl;
       }
-
+      if (levelNode->gate == PI)
+      {
+        levelNode->type = PRIMARY_INPUT;
+      }
+      else if (levelNode->gate == PO)
+      {
+        levelNode->type = PRIMARY_OUTPUT;
+      }
+      else 
+      {
+        levelNode->type = INTERNAL;
+      }
       
       //word[2] level;
-      levelNode.level = atoi(words[2].c_str());
+      levelNode->level = atoi(words[2].c_str());
       
       //word[3] numFanin;
-      levelNode.numfanin =  atoi(words[3].c_str());
+      levelNode->numFanin =  atoi(words[3].c_str());
       //word[4] faninlist...
       int count = 4;
       int j;
-      for (j = 0; j<levelNode.numFanin;++j)
+      for (j = 0; j<levelNode->numFanin;++j)
       {
         Node* node = findNode(words[count+j]);
-        if (node == NULL) Node* node_fanin_c0 = createNode(words[count+j]);
-        else Node* node_fanin_c0 = node;
+        Node* node_fanin_c0;
+        if (node == NULL) node_fanin_c0 = createNode(words[count+j]);
+        else node_fanin_c0 = node;
         
-        levelNode.fanin_c0.push_back(node_fanin_c0);
+        levelNode->fanin_c0.push_back(node_fanin_c0);
       }
       count = count + j;//6
 
       //words[4+numFanin]
-      for (j = 0; j<levelNode.numFanin; ++j)
+      for (j = 0; j<levelNode->numFanin; ++j)
       { 
         string name = words[count+j];
         Node*node = findNode(name);
-        if (node == NULL) Node * node_fanin_c1 = createNode(name);
-        else Node* node_fanin_c1 = node;
-        levelNode.fanin_c1.push_back(node_fanin_c1);
+        Node* node_fanin_c1; 
+        if (node == NULL)node_fanin_c1 = createNode(name);
+        else node_fanin_c1 = node;
+        levelNode->fanin_c1.push_back(node_fanin_c1);
       }
 
       count = count + j;//8
       //words[4+numFanin*2]
-      levelNode.numFanout =  atoi(words[count].c_str());
+      levelNode->numFanout =  atoi(words[count].c_str());
       count = count + 1;//9
       //words[4+numFanin*2+1,4+numFanin*2+1+numFanout];
-      for (j = 0; j< levelNode.numFanout; ++j)
+      for (j = 0; j< levelNode->numFanout; ++j)
       {
         string name = words[count+j];
         Node*node = findNode(name);
-        if (node == NULL) Node * node_fanout = createNode(name);
-        else Node* node_fanout = node;
-        levelNode.fanout.push_back(node_fanout);
+        Node * node_fanout;
+        if (node == NULL) node_fanout = createNode(name);
+        else node_fanout = node;
+        levelNode->fanout.push_back(node_fanout);
       }
       count = count + j;//11
       
       //words[count] oberservabitlity
-      levelNode.obs_value = atoi(words[count].c_str());
+      levelNode->obs_value = atoi(words[count].c_str());
       count = count + 2;//13
-      for (j = 0; j < levelNode.numFanin; ++j)
+      for (j = 0; j < levelNode->numFanin; ++j)
       {
-        levelNode.control_value.push_back(atoi(words[count+j].c_str()));
+        levelNode->control_value.push_back(atoi(words[count+j].c_str()));
       }
     }
   }
@@ -245,7 +261,7 @@ int Circuit::readBLIF(const string &filename)
 }
 
 int Circuit::writeBLIF(const string &filename)
-{
+{/*
   ofstream outFile(filename.c_str());
   if (!outFile.good())
   {
@@ -319,7 +335,7 @@ int Circuit::writeBLIF(const string &filename)
   outFile.close();
   
   cout << "File " << filename << " successfully written." << endl;
-  
+*/
   return 0;
 }
 
@@ -446,12 +462,11 @@ int Circuit::compute()
   cout << endl;
   return 0;
 }
-
 char Circuit::computeNode(Node* node)
 {
   // only compute when the node is not computed before
-  if (!node->getMark())
-  {
+  //if (!node->getMark())
+  //{
     vector<Node*> fanin = node->getFanin();
     string input;
     // recursively compute the nodes it depends on
@@ -460,12 +475,12 @@ char Circuit::computeNode(Node* node)
       input.push_back(computeNode(fanin[i]));
     }
     // mark the current node as computed
-    node->setMark();
+    //node->setMark();
     node->setValue(node->tt.evaluate(input));
-  }
+  //}
   return node->getValue();
 }
-
+/*
 bool Circuit::objective() {
 	// if fault location unassigned
 	if (fault.first->getValue() == 'X') {
@@ -561,7 +576,7 @@ void Imply(Node *cur_node) {
 		}
 	}
 }
-
+*/
 
 
 
