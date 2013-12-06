@@ -679,7 +679,7 @@ char TruthTable::findOutput(string input)
         return truthTable_out[i];
      }
   }
-
+/*
 
     {
       //transform 
@@ -701,8 +701,9 @@ char TruthTable::findOutput(string input)
   logic.push_back(row);
   
   return 0;
+  */
 }
-
+/*
 unsigned TruthTable::getNumEntries()
 {
   return logic.size();
