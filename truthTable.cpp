@@ -29,7 +29,7 @@ int TruthTable::setGateType(gateType g_t)
 
 
 bool TruthTable::setTruthTable_in(){
-  if (typeGate == NOT){
+  if (typeGate == NOT || typeGate == BUF){
     truthTable_in.push_back("0");
     truthTable_in.push_back("1");
     truthTable_in.push_back("X");
@@ -295,6 +295,18 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('G'); //j
     truthTable_out.push_back('L'); //f
     truthTable_out.push_back('F'); //l
+  }
+  else if(typeGate == BUF)
+  {
+    truthTable_out.push_back('0'); //0
+    truthTable_out.push_back('1'); //1
+    truthTable_out.push_back('X'); //x
+    truthTable_out.push_back('D'); //d
+    truthTable_out.push_back('B'); //b
+    truthTable_out.push_back('G'); //g
+    truthTable_out.push_back('J'); //j
+    truthTable_out.push_back('F'); //f
+    truthTable_out.push_back('L'); //l
   }
   else {
     return false;
