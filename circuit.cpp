@@ -183,6 +183,7 @@ int Circuit::readBLIF(const string &filename)
         case 8:		levelNode->gate = OR;		levelNode->tt.typeGate = OR;		break;
         case 9:		levelNode->gate = NOR;	levelNode->tt.typeGate = NOR;		break;
         case 10:	levelNode->gate = NOT;	levelNode->tt.typeGate = NOT;		break;
+        case 11:  levelNode->gate = BUF;  levelNode->tt.typeGate = BUF;   break;
         default : 
             cout << "ERROR: Gate type not recognized" << endl;
       }
