@@ -678,7 +678,7 @@ char TruthTable::findOutput(string input)
 	cout << "findOutput" << endl;
   for (unsigned i = 0; i < truthTable_in.size() ; i++)
   {
-     if (input == truthTable_in[i] || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
+     if ( input.compare(truthTable_in[i]) == 0 || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
      {
 				cout << "find in truthTable: "
         return truthTable_out[i];
