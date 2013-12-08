@@ -675,10 +675,12 @@ int TruthTable::print()
 
 char TruthTable::findOutput(string input)
 {
+	cout << "findOutput" << endl;
   for (unsigned i = 0; i < truthTable_in.size() ; i++)
   {
      if (input == truthTable_in[i] || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
      {
+				cout << "find in truthTable: "
         return truthTable_out[i];
      }
   }
@@ -769,7 +771,8 @@ char TruthTable::evaluate_helper(const string &input)
     string halfInput1, halfInput2;
     char halfReturn1, halfReturn2;
     halfInput1 = input.substr(0,halfLength-1);
-    halfInput2 = input.substr(halfLength,input.length()-1);
+    halfInput2 = input.substr(halfLength,input.length()-1);#include <iostream>
+
     halfReturn1 = TruthTable::evaluate_helper(halfInput1);
     halfReturn2 = TruthTable::evaluate_helper(halfInput2);
     string newInput;
