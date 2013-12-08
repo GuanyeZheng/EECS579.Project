@@ -176,23 +176,25 @@ int Circuit::readBLIF(const string &filename)
       int gateType_value = atoi((words[1].c_str()));
       switch(gateType_value)
       {
-        case 1: levelNode->gate = PI;break;
-        case 2: levelNode->gate = PO; break;
-        case 6: levelNode->gate = AND; break;
-        case 7: levelNode->gate = NAND;  break;
-        case 8: levelNode->gate = OR;   break;
-        case 9: levelNode->gate = NOR; break;
-        case 10: levelNode->gate = NOT; break;
+        case 1:		levelNode->gate = PI;		levelNode->tt.typeGate= PI;		break;
+        case 2:		levelNode->gate = PO;		levelNode->tt.typeGate = PI;		break;
+        case 6:		levelNode->gate = AND;	levelNode->tt.typeGate = AND;		break;
+        case 7:		levelNode->gate = NAND;	levelNode->tt.typeGate = NAND;	break;
+        case 8:		levelNode->gate = OR;		levelNode->tt.typeGate = OR;		break;
+        case 9:		levelNode->gate = NOR;	levelNode->tt.typeGate = NOR;		break;
+        case 10:	levelNode->gate = NOT;	levelNode->tt.typeGate = NOT;		break;
         default : 
             cout << "ERROR: Gate type not recognized" << endl;
       }
       if (levelNode->gate == PI)
       {
         levelNode->type = PRIMARY_INPUT;
+				PIs.push_back(levelNode);
       }
       else if (levelNode->gate == PO)
       {
         levelNode->type = PRIMARY_OUTPUT;
+				POs.push_back(levelNode);
       }
       else 
       {
@@ -204,6 +206,7 @@ int Circuit::readBLIF(const string &filename)
       
       //word[3] numFanin;
       levelNode->numFanin =  atoi(words[3].c_str());
+			levelNode->tt.numVars = atoi(words[3].c_str());
       //word[4] faninlist...
       int count = 4;
 
@@ -349,6 +352,17 @@ int Circuit::clear()
   return 0;
 }
 
+int Circuit::clearsig()
+{
+  for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
+  {
+    if (it->second != NULL)
+      it->second->setValue('X');
+  }
+  return 0;
+}
+
+
 int Circuit::printSortNode()
 {
   topoSort();
@@ -483,7 +497,7 @@ char Circuit::computeNode(Node* node)
 bool Circuit::objective() {
 	// if fault location unassigned
 	if (fault.first->getValue() == 'X') {
-		cur_obj = fault;
+		cur_obj = make_pair(fault.first, invert_val(fault.second));
 		cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;
 		return true;
 	}
@@ -497,7 +511,7 @@ bool Circuit::objective() {
 				for (int k = 0; k < prop_gate->getFanin().size(); k++) {
 					Node *obj_sig = prop_gate->getFanin()[k];
 					if (obj_sig->getValue() == 'X') {
-						cur_obj = (obj_sig, prop_gate->non_ctr_val());
+						cur_obj = make_pair(obj_sig, prop_gate->non_ctr_val());
 						cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;    
 						return true;
 					}
@@ -509,14 +523,17 @@ bool Circuit::objective() {
 	return false;
 }
 
-/*
-Node* backtrace() {
+
+Node* Circuit::backtrace() {
 	return backtrace_help(cur_obj.first, cur_obj.second);
 }
 
-Node* backtrace_help(Node *cur_node, char cur_val) {
+Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
 	if (cur_node->getType() == PRIMARY_INPUT) {
 		cur_node->setValue(cur_val);
+		cur_node->lastdecision = nearest_decision;
+		nearest_decision = cur_node;
+		cout << "current decision: " << nearest_decision->getName() << " = " << cur_val << endl;
 		return cur_node;
 	}
 	else {
@@ -532,18 +549,18 @@ Node* backtrace_help(Node *cur_node, char cur_val) {
 		//find an unassigned input, here I ignore controllbility mentioned
 		//in the paper, should be fine, correct?
 		//TODO: .lev file has controllability value which can be used
-		for (int i = 0; i < cur_node->getFanin.size(); i++) {
-			Node *next_node = cur_node->getFanin[k];
-			if (next_node->getValue == 'X') {				
+		for (int i = 0; i < cur_node->getFanin().size(); i++) {
+			Node *next_node = cur_node->getFanin()[i];
+			if (next_node->getValue() == 'X') {				
 				return backtrace_help(next_node, next_val);
 			}
 		}
 		//Assume the for loop above must find one unassigned input, or this node		//will not be selected, correct?
 	}
-	return nullptr;
+	return NULL;
 }
 
-char invert_val(char val) {
+char Circuit::invert_val(char val) {
 	char inv_val;
 	switch(val) {
 		case	'0'	: inv_val = '1';	break;
@@ -560,7 +577,7 @@ char invert_val(char val) {
 	return inv_val;
 }
 
-void Imply(Node *cur_node) {
+void Circuit::imply(Node *cur_node) {
 	//assume new value of a node will not lead a contradiction when imply
 	//correct?
 	Node *next_node;
@@ -570,15 +587,110 @@ void Imply(Node *cur_node) {
 		next_node = fanout[i];
 		if (next_node->getValue() == 'X') {
 			string next_node_input = next_node->getInput();
-			char next_node_val = next_node->tt.evaluate(&next_node_input);
+			char next_node_val = next_node->tt.evaluate(next_node_input);
 			if (next_node_val != 'X') {
-				next_node->setValue(next_node_val);
-				Imply(next_node);
+				if (next_node != fault.first) {
+					next_node->setValue(next_node_val);
+					nearest_decision->implications.push_back(next_node);
+					imply(next_node);
+				}
+				else {
+					if (next_node_val == fault.second) {
+						cout << "fault cannot be generated" << endl;
+						cout << "Error!!!" << endl;
+						exit(1);
+					}
+					else {
+						if (next_node_val == '1') {
+							next_node->setValue('D');
+							nearest_decision->implications.push_back(next_node);
+							imply(next_node);
+						}
+						else if (next_node_val == '0') {
+							next_node->setValue('B');
+							nearest_decision->implications.push_back(next_node);
+							imply(next_node);
+						}
+						else {
+							cout << "Error!!!" << endl;
+							exit(1);
+						}
+					}
+				}
 			}
 		}
 	}
 }
-*/
+
+bool Circuit::is_fault_found() {
+  for (unsigned i = 0; i < POs.size(); i++)
+  {
+    if (POs[i]->value == 'D' || POs[i]->value == 'B') {
+      return true;
+		}
+  }
+	return false;
+}
+
+bool Circuit::backtrack() {
+	bool success = false;
+	while (1) {
+		unsigned numimplications = nearest_decision->implications.size();
+		for (unsigned i = 0; i < numimplications; i++) {
+			nearest_decision->implications[i]->value == 'X';
+		}
+		nearest_decision->implications.clear();
+		if (nearest_decision->isbacktracked) {
+			if (nearest_decision->lastdecision != NULL) {
+				nearest_decision = nearest_decision->lastdecision;
+				continue;
+			}
+			else {
+				break;
+			}
+		}
+		else {
+			nearest_decision->value == invert_val(nearest_decision->value);
+			nearest_decision->isbacktracked = true;
+			success = true;
+			break;
+		}
+	}
+	return success;
+}
+	
+
+bool Circuit::podem(Node *faulty_node, char fault_value) {
+	bool is_test_found = false;
+	//clearall
+	fault = make_pair(faulty_node, fault_value);
+	cout << "fault = <" << faulty_node->getName() << ", " << fault_value << ">" << endl; 
+	while (1) {
+		if(objective()) {
+			Node* decision_node = backtrace();
+			imply(decision_node);
+			if (is_fault_found()) {
+				is_test_found = true;
+				break;
+			}
+		}
+		else {
+			if (backtrack()) {
+				imply(nearest_decision);
+				if (is_fault_found()) {
+				is_test_found = true;
+				break;
+				}
+			}
+			else {
+				break;
+			}
+		}
+	}
+	return is_test_found;
+}
+			
+
 
 
 

@@ -46,7 +46,18 @@ int main(int argc, char **argv)
         Circuit c(inFilename);
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
-        c.print()
+				Node *faulty_node = c.getPOs()[0];
+				cout << faulty_node->getName() << endl;
+        if (c.podem(faulty_node, '0')) {
+					cout << "test found" << endl;
+					vector<Node*> test = c.getPIs();
+					for (i = 0; i < test.size(); i++) {
+						cout << "node: " << test[i]->getName() << " = " << test[i]->getValue() << endl;
+					}
+				}
+				else {
+					cout << "test failed" << endl;
+				}
       }
       else
       {

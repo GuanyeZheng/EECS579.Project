@@ -46,11 +46,15 @@ class Node
 		//bool faulty;
 		//char fault_value;
     
+		bool isbacktracked;
+		vector<Node*> implications;
+		Node* lastdecision;
+
   public:
     // constructors
     Node():type(INTERNAL), value('X') {}
     
-    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X') {}
+    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X'), isbacktracked(false) {}
     
     // destructor
     ~Node() {};
