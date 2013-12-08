@@ -29,7 +29,8 @@ int TruthTable::setGateType(gateType g_t)
 
 
 bool TruthTable::setTruthTable_in(){
-  if (typeGate == NOT || typeGate == BUF){
+	cout << "typeGate: " << typeGate << endl;
+  if (typeGate == NOT || typeGate == BUF || typeGate == PO){
     truthTable_in.push_back("0");
     truthTable_in.push_back("1");
     truthTable_in.push_back("X");
@@ -296,7 +297,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('L'); //f
     truthTable_out.push_back('F'); //l
   }
-  else if(typeGate == BUF)
+  else if(typeGate == BUF || typeGate == PO)
   {
     truthTable_out.push_back('0'); //0
     truthTable_out.push_back('1'); //1
@@ -676,11 +677,13 @@ int TruthTable::print()
 char TruthTable::findOutput(string input)
 {
 	cout << "findOutput" << endl;
+	cout << "truthTable_in:size = " << truthTable_in.size() << endl;
   for (unsigned i = 0; i < truthTable_in.size() ; i++)
   {
+		cout << "enterloop" << endl;
      if ( input.compare(truthTable_in[i]) == 0 || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
      {
-				cout << "find in truthTable: "
+				cout << "find!!!" << endl;
         return truthTable_out[i];
      }
   }
@@ -771,7 +774,7 @@ char TruthTable::evaluate_helper(const string &input)
     string halfInput1, halfInput2;
     char halfReturn1, halfReturn2;
     halfInput1 = input.substr(0,halfLength-1);
-    halfInput2 = input.substr(halfLength,input.length()-1);#include <iostream>
+    halfInput2 = input.substr(halfLength,input.length()-1);
 
     halfReturn1 = TruthTable::evaluate_helper(halfInput1);
     halfReturn2 = TruthTable::evaluate_helper(halfInput2);

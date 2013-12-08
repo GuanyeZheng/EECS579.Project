@@ -29,7 +29,7 @@ class Circuit
 		pair<Node*, char> fault;
 		pair<Node*, char> cur_obj;
 		Node* nearest_decision;
-    vector<Node*> d_frontier;
+    map<string, Node*> d_frontier;
 		vector<Node*> PIs;
 		vector<Node*> POs;
 
