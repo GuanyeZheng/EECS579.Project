@@ -592,7 +592,7 @@ bool TruthTable::setTruthTable()
 
 }
 
-/*
+
 int TruthTable::addEntry(const string &newEntry)
 {
   if (newEntry.length() != numVars)
@@ -633,12 +633,9 @@ unsigned TruthTable::getNumEntries()
 {
   return logic.size();
 }
-*/
-unsigned TruthTable::getNumVars()
-{
-  return numVars;
-}
-/*
+
+
+
 int TruthTable::print()
 {
   for (unsigned i = 0; i < logic.size(); ++i)
@@ -663,25 +660,19 @@ int TruthTable::print()
 */
 
 
-int TruthTable::clear()
-{
-  truthTable_in.clear();
-  truthTable_out.clear();
-  return 0;
-}
 
 char TruthTable::findOutput(string input)
 {
-  for (int i = 0; i < truthTable_in.size() ; i++)
+  for (unsigned i = 0; i < truthTable_in.size() ; i++)
   {
      if (input == truthTable_in[i] || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
      {
         return truthTable_out[i];
      }
   }
-/*
 
-    {
+	/*
+  {
       //transform 
       case '0': row[i] = ZERO; break;
       case '1': row[i] = ONE;  break;
@@ -703,6 +694,7 @@ char TruthTable::findOutput(string input)
   return 0;
   */
 }
+
 /*
 unsigned TruthTable::getNumEntries()
 {
@@ -743,18 +735,6 @@ int TruthTable::clear()
   truthTable_in.clear();
   truthTable_out.clear();
   return 0;
-}
-
-char findOutput(string input)
-{
-  for (int i = 0; i < truthTable_in.size() ; i++)
-  {
-     if (input == truthTable_in[i] || (numVars != 1 && input[0]==truthTable_in[i][1] && input[1]==truthTable_in[i][0]))
-     {
-        return truthTable_out[i];
-     }
-  }
-
 }
 
 char TruthTable::evaluate_helper(const string &input)

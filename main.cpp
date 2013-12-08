@@ -22,7 +22,7 @@ int main(int argc, char **argv)
       usage(argv[0]);
     }
     
-    else if (argv[i] == string("-topoSort"))
+    else if (argv[i] == string("-build"))
     {
       if (i + 1 < argc)
       {
@@ -30,11 +30,27 @@ int main(int argc, char **argv)
         Circuit c(inFilename);
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
-        c.printSortNode();
+        c.print();
       }
       else
       {
-        cout << "option -topoSort requires an additional argument." << endl;
+        cout << "option -build requires an additional argument." << endl;
+        usage(argv[0]);
+      }
+    }
+		else if (argv[i] == string("-testobj"))
+    {
+      if (i + 1 < argc)
+      {
+        string inFilename = string(argv[++i]);
+        Circuit c(inFilename);
+        // your code here
+        // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
+        c.print()
+      }
+      else
+      {
+        cout << "option -testobj requires an additional argument." << endl;
         usage(argv[0]);
       }
     }

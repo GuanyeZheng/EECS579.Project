@@ -7,10 +7,10 @@
 FILES =  truthTable.cpp circuit.cpp main.cpp
 
 all: 
-	g++ -O3 -Wall -lm -g -o project3 ${FILES}
+	g++ -O3 -Wall -lm -g -o project ${FILES}
 
 backup:
 	cp -rf *.c *.h Makefile backup/*
 
 clean:
-	rm -f project3 *~
+	rm -f project *~

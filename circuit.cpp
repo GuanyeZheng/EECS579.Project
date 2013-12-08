@@ -206,8 +206,8 @@ int Circuit::readBLIF(const string &filename)
       levelNode->numFanin =  atoi(words[3].c_str());
       //word[4] faninlist...
       int count = 4;
-      int j;
-      for (j = 0; j<levelNode->numFanin;++j)
+
+      for (unsigned j = 0; j<levelNode->numFanin;++j)
       {
         Node* node = findNode(words[count+j]);
         Node* node_fanin_c0;
@@ -216,42 +216,41 @@ int Circuit::readBLIF(const string &filename)
         
         levelNode->fanin_c0.push_back(node_fanin_c0);
       }
-      count = count + j;//6
+      count = count + levelNode->numFanin;//6
 
       //words[4+numFanin]
-      for (j = 0; j<levelNode->numFanin; ++j)
+      for (unsigned k = 0; k < levelNode->numFanin; ++k)
       { 
-        string name = words[count+j];
-        Node*node = findNode(name);
+        string name = words[count+k];
+        Node* node = findNode(name);
         Node* node_fanin_c1; 
         if (node == NULL)node_fanin_c1 = createNode(name);
         else node_fanin_c1 = node;
         levelNode->fanin_c1.push_back(node_fanin_c1);
       }
 
-      count = count + j;//8
+      count = count + levelNode->numFanin;//8
       //words[4+numFanin*2]
       levelNode->numFanout =  atoi(words[count].c_str());
-      count = count + 1;//9
+      count++;//9
       //words[4+numFanin*2+1,4+numFanin*2+1+numFanout];
-      for (j = 0; j< levelNode->numFanout; ++j)
+      for (unsigned l = 0; l < levelNode->numFanout; ++l)
       {
-        string name = words[count+j];
-        Node*node = findNode(name);
+        string name = words[count+l];
+        Node *node = findNode(name);
         Node * node_fanout;
         if (node == NULL) node_fanout = createNode(name);
         else node_fanout = node;
         levelNode->fanout.push_back(node_fanout);
       }
-      count = count + j;//11
+      count = count + levelNode->numFanout;//11
       
       //words[count] oberservabitlity
       levelNode->obs_value = atoi(words[count].c_str());
       count = count + 2;//13
-      for (j = 0; j < levelNode->numFanin; ++j)
-      {
-        levelNode->control_value.push_back(atoi(words[count+j].c_str()));
-      }
+			levelNode->c0 = atoi(words[count].c_str());
+			count++;
+			levelNode->c1 = atoi(words[count].c_str());
     }
   }
   
@@ -480,11 +479,12 @@ char Circuit::computeNode(Node* node)
   //}
   return node->getValue();
 }
-/*
+
 bool Circuit::objective() {
 	// if fault location unassigned
 	if (fault.first->getValue() == 'X') {
 		cur_obj = fault;
+		cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;
 		return true;
 	}
 	
@@ -498,6 +498,7 @@ bool Circuit::objective() {
 					Node *obj_sig = prop_gate->getFanin()[k];
 					if (obj_sig->getValue() == 'X') {
 						cur_obj = (obj_sig, prop_gate->non_ctr_val());
+						cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;    
 						return true;
 					}
 				}
@@ -508,6 +509,7 @@ bool Circuit::objective() {
 	return false;
 }
 
+/*
 Node* backtrace() {
 	return backtrace_help(cur_obj.first, cur_obj.second);
 }

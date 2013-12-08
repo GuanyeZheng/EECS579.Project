@@ -33,13 +33,18 @@ class Node
     int numFanout;
     vector<Node*> fanout;//successors in order of decreasing obs. value;
     int obs_value;//observability value;
-    vector<int> control_value;//controllability values C0 and C1;
+    int c0;
+		int c1; //controllability values C0 and C1;
 		// add for 579
 
     TruthTable tt;
     // add two private variables in support of topoSort and simulate
     bool marked;
     char value;
+
+		// used for injecting a fault
+		//bool faulty;
+		//char fault_value;
     
   public:
     // constructors
@@ -95,7 +100,7 @@ class Node
     // prints node informationnode.h:112: error: ‘fanin’ was not declared in this scope
 
     int print()
-    {
+    {    
       cout << "Name: " << name << " [TYPE = ";
       switch(type)
       {
@@ -105,16 +110,41 @@ class Node
         case ZERO_NODE     : cout << "ZERO_NODE";      break;
         case ONE_NODE      : cout << "ONE_NODE";       break;
       }
-      cout << "]" << endl;
+      cout << "] ";
+
+			cout << "[Gate = ";
+			switch(gate)
+			{
+				case AND:		cout << "AND";	break;
+				case OR	:		cout << "OR";		break;
+				case NOT:		cout << "NOT";	break;
+				case NAND:	cout << "NAND";	break;
+				case NOR:		cout << "NOR";	break;
+				case PI:		cout << "PI";		break;
+				case PO:		cout << "PO";		break;
+			}
+			cout << "]" << endl;
       
+			cout << "level = " << level << endl;
+			cout << "num of Fanins= " << numFanin << endl;
+
       if (type == PRIMARY_OUTPUT || type == INTERNAL)
       {
-        cout << "Fanin nodes: ";
+        cout << "Fanin nodes in order of decreasing C0: ";
         for (unsigned i = 0; i < numFanin; ++i)
           cout << fanin_c0[i]->name << " ";
         cout << endl;
         //tt.print();
       }
+      if (type == PRIMARY_OUTPUT || type == INTERNAL)
+      {
+        cout << "Fanin nodes in order of decreasing C1: ";
+        for (unsigned i = 0; i < numFanin; ++i)
+          cout << fanin_c1[i]->name << " ";
+        cout << endl;
+        //tt.print();
+      }
+			cout << "num of Fanouts = " << numFanout << endl;
 
 			// add for 579
 			if (type == PRIMARY_INPUT || type == INTERNAL)
@@ -124,6 +154,10 @@ class Node
 					cout << fanout[i]->name << " ";
 				cout << endl;
 			}
+			cout << "observability = " << obs_value << endl;
+			cout << "C0 = " << c0 << endl;
+			cout << "C1 = " << c1 << endl;
+
       
       return 0;
     }
@@ -158,7 +192,7 @@ class Node
 		//get the input and return as a string
 		string getInput() {
 			stringstream ss;
-			int fanin_size = numFanin;
+			unsigned fanin_size = numFanin;
 			for (unsigned i = 0; i < fanin_size; i++) {
 				ss << fanin_c0[i]->getValue();
 			}
