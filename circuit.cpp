@@ -178,6 +178,7 @@ int Circuit::readBLIF(const string &filename)
       {
         case 1:		levelNode->gate = PI;		levelNode->tt.typeGate= PI;		break;
         case 2:		levelNode->gate = PO;		levelNode->tt.typeGate = PI;		break;
+        case 5: levelNode->gate = DFF;    levelNode->tt.typeGate = DFF;   break;//for dff
         case 6:		levelNode->gate = AND;	levelNode->tt.typeGate = AND;		break;
         case 7:		levelNode->gate = NAND;	levelNode->tt.typeGate = NAND;	break;
         case 8:		levelNode->gate = OR;		levelNode->tt.typeGate = OR;		break;
