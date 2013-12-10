@@ -511,14 +511,20 @@ bool Circuit::objective() {
 	//TODO: the way I move out d_frontiers can be improved
 	for (mapIter it = d_frontier.begin(); it != d_frontier.end(); it++) {
 		is_d_frontier = false;
+		cout << "looking for d_frontiers" << endl;
 		Node *d_front = it->second;
 		for (int j = 0; j < d_front->getFanout().size(); j++) {
+			cout << "checkpoint1" << endl;
 			Node *prop_gate = d_front->getFanout()[j];
-			if (prop_gate->getValue() == 'X') {
+			if (prop_gate->getValue() == 'X' || prop_gate->getValue() == 'G' || prop_gate->getValue() == 'J' || prop_gate->getValue() == 'F' || prop_gate->getValue() == 'L') {
+				cout << "checkpoint2" << endl;
 				is_d_frontier = true;
 				for (int k = 0; k < prop_gate->getFanin().size(); k++) {
+					cout << "checkpoint3" << endl;
 					Node *obj_sig = prop_gate->getFanin()[k];
+					cout << obj_sig->getValue() << endl;
 					if (obj_sig->getValue() == 'X') {
+						cout << "checkpoint4" << endl;
 						cur_obj = make_pair(obj_sig, prop_gate->non_ctr_val());
 						cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;    
 						return true;
@@ -547,9 +553,15 @@ Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
 		else {
 			if (cur_val == '0') {
 				cur_node->setValue('B');
+				if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
+					d_frontier[cur_node->getName()] = cur_node;
+				}
 			}
 			else if (cur_val == '1') {
 				cur_node->setValue('D');
+				if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
+					d_frontier[cur_node->getName()] = cur_node;
+				}
 			}
 			else { 
 				cout << "error in backtrace helper" << endl;
@@ -568,6 +580,7 @@ Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
 			next_val = cur_val;
 		}
 		else {
+			cout << "inverval?" << endl;
 			next_val = invert_val(cur_val);
 		}
 		//find an unassigned input, here I ignore controllbility mentioned
@@ -610,7 +623,7 @@ void Circuit::imply(Node *cur_node) {
 	bool is_d_frontier = false;
 	for (int i = 0; i < fanout_size; i++) {
 		next_node = fanout[i];
-		if (next_node->getValue() == 'X') {
+		if (next_node->getValue() == 'X' || next_node->getValue() == 'G' || next_node->getValue() == 'J' || next_node->getValue() == 'F' || next_node->getValue() == 'L') {
 			string next_node_input = next_node->getInput();
 			cout << "next_node_input: " << next_node_input << endl;
 			char next_node_val = next_node->tt.evaluate(next_node_input);
@@ -654,7 +667,7 @@ void Circuit::imply(Node *cur_node) {
 				
 		}
 	}
-	if (is_d_frontier) {
+	if (is_d_frontier && (cur_node->getValue() == 'D' || cur_node->getValue() == 'B')) {
 		if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
 			d_frontier[cur_node->getName()] = cur_node;
 		}
