@@ -166,10 +166,14 @@ int Circuit::readBLIF(const string &filename, int n)
   firstLine = line; 
   int num_gate = atoi(firstLine.c_str())-1; //number of gates in the circuit;
   getline(inFile,line); // to pass the second line, which is of no use.
-
+  
+  int count_line = 1;
   //start fetch from the third line;
   while (getline(inFile, line))
   {
+     cout<<count_line<<endl;
+     count_line++;
+
 //    cout << "processing line: " << line << endl;
     stringstream sstr;
     // skip empty lines
@@ -191,6 +195,7 @@ int Circuit::readBLIF(const string &filename, int n)
       //words[0] node name
       //for frame n node_name = words[0]+n*gateNumber;
       string cur_node_name = cal_node_number(n, num_gate, words[0]);
+      cout<<"cur_node_name:"<<cur_node_name<<endl;
       Node* node = findNode(cur_node_name);
       Node* levelNode;
       if (node == NULL){
@@ -199,19 +204,23 @@ int Circuit::readBLIF(const string &filename, int n)
       else {
         levelNode = node; 
       }
+      
+      levelNode->timeframe = n;
+      cout<<"pass words 0"<<endl;
       //words[1] gate type node type;
       int gateType_value = atoi((words[1].c_str()));
       switch(gateType_value)
       {
-        case 1: levelNode->gate = PI;break;
-        case 2: levelNode->gate = PO; break;
-        case 5: levelNode->gate = DFF; break;//for dff
-        case 6: levelNode->gate = AND; break;
-        case 7: levelNode->gate = NAND;  break;
-        case 8: levelNode->gate = OR;   break;
-        case 9: levelNode->gate = NOR; break;
-        case 10: levelNode->gate = NOT; break;
-        case 11: levelNode->gate = BUF; break;
+        case 1:		levelNode->gate = PI;		levelNode->tt.typeGate= PI;		  break;
+        case 2:		levelNode->gate = PO;		levelNode->tt.typeGate = PI;		break;
+        case 5:   levelNode->gate = DFF;  levelNode->tt.typeGate = DFF;   break;//for dff
+        case 6:		levelNode->gate = AND;	levelNode->tt.typeGate = AND;		break;
+        case 7:		levelNode->gate = NAND;	levelNode->tt.typeGate = NAND;	break;
+        case 8:		levelNode->gate = OR;		levelNode->tt.typeGate = OR;		break;
+        case 9:		levelNode->gate = NOR;	levelNode->tt.typeGate = NOR;		break;
+        case 10:	levelNode->gate = NOT;	levelNode->tt.typeGate = NOT;		break;
+        case 11:  levelNode->gate = BUF;  levelNode->tt.typeGate = BUF;   break;
+
         default : 
             cout << "ERROR: Gate type not recognized" << endl;
       }
@@ -236,7 +245,7 @@ int Circuit::readBLIF(const string &filename, int n)
       }
       
       
-      
+     cout<<"pass words [1]"<<endl; 
 
       //word[2] level;
       levelNode->level = atoi(words[2].c_str());
@@ -254,6 +263,7 @@ int Circuit::readBLIF(const string &filename, int n)
         if (node == NULL) node_fanin_c0 = createNode(node_name);
         else node_fanin_c0 = node;
         levelNode->fanin_c0.push_back(node_fanin_c0);
+
       }
       count = count + levelNode->numFanin;//6
 
@@ -270,24 +280,31 @@ int Circuit::readBLIF(const string &filename, int n)
       if (levelNode->gate == DFF)
       {
         (levelNode->fanin_c0.front())->type = PSEUDO_OUTPUT;
+        cout<<"fanin to dff = "<<levelNode->fanin_c0.front()->name<<endl;
         string psedo_out_name =calc_psedo_output_name(num_gate,levelNode->fanin_c0.front()->name); 
+        cout<<"fanin to dff after cal= "<<psedo_out_name<<endl;
         node = findNode(psedo_out_name);
         Node* node_fanin_c0;
         if (node == NULL)  node_fanin_c0 = createNode(psedo_out_name);
         else node_fanin_c0 = node;
+        node_fanin_c0->type = PSEUDO_OUTPUT;
+        node_fanin_c0->timeframe = n-1;
         levelNode->fanin_c0.pop_back();
         levelNode->fanin_c0.push_back(node_fanin_c0);
         levelNode->fanin_c1.pop_back();
         levelNode->fanin_c1.push_back(node_fanin_c0);
       }    
-
+      cout<<"number of fanin"<<levelNode->numFanin<<endl;
       count = count + levelNode->numFanin;//8
       //words[4+numFanin*2]
+      cout<<"count = "<<count<<endl;
       levelNode->numFanout =  atoi(words[count].c_str());
+      cout<<cur_node_name<<" number_of_fanout = "<<levelNode->numFanout<<endl;
       count++;//9
       //words[4+numFanin*2+1,4+numFanin*2+1+numFanout];
       for (unsigned l = 0; l < levelNode->numFanout; ++l)
       {
+        cout<<l<<endl;  
         string words_l = words[count+l];
         string node_name = cal_node_number(n,num_gate, words_l);
         node = findNode(node_name);
@@ -296,28 +313,46 @@ int Circuit::readBLIF(const string &filename, int n)
         else node_fanout = node;
         levelNode->fanout.push_back(node_fanout);
       }
+      
       if (levelNode->type == PSEUDO_OUTPUT)
       {
         for (unsigned l = 0; l < levelNode->numFanout; ++l)
         {
-          string fout_name = levelNode->fanout[l]->name;
-          string node_name = calc_psedo_input_name(num_gate,fout_name);
-          node = findNode(node_name);
-          Node * node_fanout;
-          if (node == NULL) node_fanout = createNode(node_name);
-          else node_fanout = node;
-          levelNode->fanout[l]=(node_fanout);
+          if(levelNode->fanout[l]->gate == DFF)
+          {
+            string fout_name = levelNode->fanout[l]->name;
+            string node_name = calc_psedo_input_name(num_gate,fout_name);
+            node = findNode(node_name);
+            Node * node_fanout;
+            if (node == NULL) node_fanout = createNode(node_name);
+            else node_fanout = node;
+            node_fanout->fanin_c0.push_back(levelNode);
+            node_fanout->type = PSEUDO_INPUT;
+            node_fanout->level = levelNode->fanout[l]->level;
+            node_fanout->gate = DFF;
+            node_fanout->numFanin =1;
+            node_fanout->fanin_c0.push_back(levelNode);
+            node_fanout->c0 = 0;
+            node_fanout->c1 = 0;
+            node_fanout->obs_value = 0;
+            node_fanout->fanin_c1.push_back(levelNode);
+            node_fanout->numFanout = 0;
+            node_fanout->timeframe = n+1;
+            levelNode->fanout[l]=(node_fanout);
+          }
         }
 
       }
-
+      cout<<"pass fanout"<<endl;
 
       count = count + levelNode->numFanout;//11
       
       //words[count] oberservabitlity
       levelNode->obs_value = atoi(words[count].c_str());
-      count = count + 2;//13
+      count = count + 2;//13a
+      
 			levelNode->c0 = atoi(words[count].c_str());
+      cout<<"pass here"<<endl;
 			count++;
 			levelNode->c1 = atoi(words[count].c_str());
     }

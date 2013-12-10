@@ -25,6 +25,8 @@ class Node
     string name;
     nodeType type;
 		gateType gate;
+
+    int timeframe;//indicates which time frame it belongs to;
     
     int level;
     unsigned int numFanin;
@@ -109,6 +111,8 @@ class Node
         case INTERNAL      : cout << "INTERNAL";       break;
         case ZERO_NODE     : cout << "ZERO_NODE";      break;
         case ONE_NODE      : cout << "ONE_NODE";       break;
+        case PSEUDO_INPUT  : cout << "PSEUDO_INPUT";   break;
+        case PSEUDO_OUTPUT : cout << "PSEUDO_OUTPUT";  break;
       }
       cout << "] ";
 
@@ -122,6 +126,8 @@ class Node
 				case NOR:		cout << "NOR";	break;
 				case PI:		cout << "PI";		break;
 				case PO:		cout << "PO";		break;
+        case DFF:   cout << "DFF";  break;
+        case BUF:   cout << "BUF";  break;
 			}
 			cout << "]" << endl;
       
