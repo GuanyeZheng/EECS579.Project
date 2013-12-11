@@ -1,0 +1,29 @@
+#!/bin/csh
+echo "0" > TEST.run
+hostname >> TEST.run
+echo $1.bench >> TEST.run
+echo $1.lev>> TEST.run
+echo $1.vec>> TEST.run
+echo $1.fault>> TEST.run
+echo $1.eqf>> TEST.run
+echo $1.ufl>> TEST.run
+hostname >> TEST.run
+hostname >> TEST.run
+echo $1.name>> TEST.run
+echo $1.atp>> TEST.run
+echo $1.frs>> TEST.run
+echo $1.grs>> TEST.run
+echo 1281>> TEST.run
+echo 1>> TEST.run
+echo 1>> TEST.run
+echo 0>> TEST.run
+echo 0>> TEST.run
+echo 0>> TEST.run
+echo $1.dom>> TEST.run
+echo $1.red>> TEST.run
+echo 16400>> TEST.run
+echo 10000>> TEST.run
+echo 10000>> TEST.run
+echo 120>> TEST.run
+echo $1.scan>> TEST.run
+
