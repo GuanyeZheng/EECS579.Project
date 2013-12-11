@@ -130,7 +130,7 @@ int Circuit::print()
   return 0;
 }
 
-string cal_node_number(int n, int gateNo, string cur_number)
+string Circuit::cal_node_number(int n, int gateNo, string cur_number)
 {
   int new_node_number = atoi(cur_number.c_str())+n*gateNo;
   stringstream ss;
@@ -138,14 +138,14 @@ string cal_node_number(int n, int gateNo, string cur_number)
   return ss.str();
 }
 
-string calc_psedo_output_name( int gateNo, string cur_number)
+string Circuit::calc_psedo_output_name( int gateNo, string cur_number)
 {
   int new_node_number = atoi(cur_number.c_str()) - gateNo;
   stringstream ss;
   ss << new_node_number;
   return ss.str();
 }
-string calc_psedo_input_name( int gateNo, string cur_number)
+string Circuit::calc_psedo_input_name( int gateNo, string cur_number)
 {
   int new_node_number = atoi(cur_number.c_str()) + gateNo;
   stringstream ss;
@@ -175,6 +175,8 @@ int Circuit::readBLIF(const string &filename, int n)
   firstLine = line; 
   int num_gate = atoi(firstLine.c_str())-1; //number of gates in the circuit;
   getline(inFile,line); // to pass the second line, which is of no use.
+  
+  circuitGate = num_gate;
   
   int count_line = 1;
   //start fetch from the third line;
@@ -625,6 +627,31 @@ char Circuit::computeNode(Node* node)
 int Circuit::add_timeframe(const string &filename,int n) //n:frame number;
 {
   return readBLIF(filename,n);
+}
+
+int Circuit::site_fault(string node_name, char stuck_value, int cur_frame)
+{
+  Node* node = findNode(node_name);
+  int node_name_int = atoi(node_name.c_str());
+  if(node == NULL)
+  {
+    cout<<"the node does not exits"<<endl;
+  }else
+  {
+    for (int i = 0; i <cur_frame;++i)
+    {
+        string node_name = cal_node_number(cur_frame,circuitGate, node_name);
+        node = findNode(node_name);
+        if (node == NULL)
+        {
+          cout<<"we have a problem finding this node in other frames:"<<node_name<<endl;
+        }
+        else {
+          node->sal_value = stuck_value;
+          node->fault_target = true;
+        }
+    }
+  }
 }
 
 

@@ -29,6 +29,8 @@ class Circuit
 		pair<Node*, char> fault;
 		pair<Node*, char> cur_obj;
 
+    int circuitGate;//in one frame;
+
     		Node* nearest_decision;
     map<string, Node*> d_frontier;
 		vector<Node*> PIs;
@@ -122,10 +124,18 @@ class Circuit
 		bool is_fault_found();
 
 		bool backtrack(); 
+    
+    
+    string cal_node_number(int n, int gateNo, string cur_number);
+    string calc_psedo_input_name( int gateNo, string cur_number);
+    string calc_psedo_output_name( int gateNo, string cur_number);
 
 		bool podem(Node *faulty_node, char fault_value);
     // expand one timeframe forward;
     int add_timeframe(const string &filename, int n);  
+
+    int site_fault(string node_name, char stuck_value, int cur_frame);
+
 };
 
 #endif

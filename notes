@@ -16,4 +16,15 @@ Node:
 
 3. add fanout list and getFanout(), addFanout(), getNumFanout(), clearFanout().
 
-http://courses.engr.illinois.edu/ece543/iscas85.html
+
+
+
+1.http://courses.engr.illinois.edu/ece543/iscas85.html 
+//combination circuit lev file
+
+paper for compare:
+2. Explorations of Sequential ATPG Using Boolean Satisfiability
+3. Test Generation and Verification for Highly Sequential Circuits
+4. Fast Sequential ATPG Based on Implicit State Enumeration
+
+

@@ -27,6 +27,8 @@ class Node
 		gateType gate;
 
     int timeframe;//indicates which time frame it belongs to;
+    char sal_value;//0: S-A-0,1:S-A-1
+    bool fault_target;//true: it is the target fault, 
     
     int level;
     unsigned int numFanin;
