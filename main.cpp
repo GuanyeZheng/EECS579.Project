@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 				char fault_val = '0';
 				while (framecount <= MAXFRAME && !test_found) {
 					c.clearsig();
-					c.setfault(faulty_node, fault_val);
+					c.site_fault(faulty_node->getName(), fault_val, framecount);
 					test_found = c.podem(faulty_node, fault_val);
 					if (test_found) {
 						cout << "test found with " << framecount << " frames" << endl;
