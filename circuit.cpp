@@ -655,8 +655,9 @@ int Circuit::add_timeframe(const string &filename,int n) //n:frame number;
 
 int Circuit::site_fault(string node_name, char stuck_value, int cur_frame)
 {
+
+  cout<<"fautl node is "<<node_name;
   Node* node = findNode(node_name);
-  int node_name_int = atoi(node_name.c_str());
   if(node == NULL)
   {
     cout<<"the node does not exits"<<endl;
@@ -664,11 +665,11 @@ int Circuit::site_fault(string node_name, char stuck_value, int cur_frame)
   {
     for (int i = 0; i <cur_frame;++i)
     {
-        string node_name = cal_node_number(i,circuitGate, node_name);
-        node = findNode(node_name);
+        string node_name_s = cal_node_number(i,circuitGate, node_name);
+        node = findNode(node_name_s);
         if (node == NULL)
         {
-          cout<<"we have a problem finding this node in other frames:"<<node_name<<endl;
+          cout<<"we have a problem finding this node in the circuit"<<node_name_s<<endl;
         }
         else {
           node->sal_value = stuck_value;
