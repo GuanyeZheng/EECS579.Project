@@ -179,13 +179,14 @@ int Circuit::readBLIF(const string &filename, int n)
   
   // clear circuit's contents
   //clear();
-  
+	framecount = n+1;
   string line;
 
   getline(inFile,line);
   string firstLine, secondLine;
   firstLine = line; 
   int num_gate = atoi(firstLine.c_str())-1; //number of gates in the circuit;
+	nodeNum = num_gate;
   getline(inFile,line); // to pass the second line, which is of no use.
   
   circuitGate = num_gate;
@@ -277,6 +278,12 @@ int Circuit::readBLIF(const string &filename, int n)
       
       //word[3] numFanin;
       levelNode->numFanin =  atoi(words[3].c_str());
+			levelNode->tt.numVars = atoi(words[3].c_str());
+			levelNode->tt.setTruthTable_in();
+			levelNode->tt.setTruthTable();
+
+
+
       //word[4] faninlist...
       int count = 4;
 
@@ -695,6 +702,7 @@ bool Circuit::objective() {
 		is_d_frontier = false;
 		cout << "looking for d_frontiers" << endl;
 		Node *d_front = it->second;
+		cout << "current d_frontier: " << d_front->getName() << endl;
 		for (int j = 0; j < d_front->getFanout().size(); j++) {
 			cout << "checkpoint1" << endl;
 			Node *prop_gate = d_front->getFanout()[j];
@@ -716,9 +724,10 @@ bool Circuit::objective() {
 		}
 		if (!is_d_frontier) {
 			d_frontier.erase(d_front->getName());
+			cout << "check" << endl;
 		}
 	}
-
+	cout << "chec!!!!!!!!!!" << endl;
 	return false;
 }
 
@@ -805,9 +814,9 @@ void Circuit::imply(Node *cur_node) {
 	bool is_d_frontier = false;
 	for (int i = 0; i < fanout_size; i++) {
 		next_node = fanout[i];
-		if (next_node->getValue() == 'X' || next_node->getValue() == 'G' || next_node->getValue() == 'J' || next_node->getValue() == 'F' || next_node->getValue() == 'L') {
+			if ((next_node->getValue() == 'X' || next_node->getValue() == 'G' || next_node->getValue() == 'J' || next_node->getValue() == 'F' || next_node->getValue() == 'L') && (atoi(next_node->getName().c_str()) <= framecount*nodeNum)) {
 			string next_node_input = next_node->getInput();
-			cout << "next_node_input: " << next_node_input << endl;
+			cout << "next_node_input: " << next_node_input << " node name is " << next_node->getName() << endl;
 			char next_node_val = next_node->tt.evaluate(next_node_input);
 			cout << "next_node_val: " << next_node_val << endl;
 			if (next_node_val != 'X') {
@@ -868,22 +877,32 @@ bool Circuit::is_fault_found() {
 
 bool Circuit::backtrack() {
 	bool success = false;
+
+
 	while (1) {
+		cout << "now in backtrack" << endl;
+		cout << "nearest decision is " << nearest_decision->getName() << "and isbacktracked = " << nearest_decision->isbacktracked << endl;
 		unsigned numimplications = nearest_decision->implications.size();
 		for (unsigned i = 0; i < numimplications; i++) {
+			//TODO: not necessarity set to 'X', should set back to the value before
 			nearest_decision->implications[i]->value == 'X';
 		}
 		nearest_decision->implications.clear();
 		if (nearest_decision->isbacktracked) {
+			cout << "c1" << endl;
 			if (nearest_decision->lastdecision != NULL) {
+				cout << "c2" << endl;
 				nearest_decision = nearest_decision->lastdecision;
 				continue;
 			}
 			else {
+				cout << "c3" << endl;
 				break;
 			}
 		}
 		else {
+			cout << "c4" << endl;
+			cout << "backtrack succ" << endl;
 			nearest_decision->value == invert_val(nearest_decision->value);
 			nearest_decision->isbacktracked = true;
 			success = true;

@@ -36,7 +36,12 @@ class Circuit
 		vector<Node*> PIs;
 		vector<Node*> POs;
     vector<Node*> dff_node; //map of dff;
+
   public:
+
+		int nodeNum;
+		int framecount;
+
     // constructors
     Circuit() {};
     

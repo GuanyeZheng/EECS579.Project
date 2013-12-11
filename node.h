@@ -58,7 +58,7 @@ class Node
     // constructors
     Node():type(INTERNAL), value('X') {}
     
-    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X') {}
+    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X'), isbacktracked(false) {}
     
     // destructor
     ~Node() {};
