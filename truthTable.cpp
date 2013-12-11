@@ -210,7 +210,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('1');  //1l
     truthTable_out.push_back('X');  //xx
     truthTable_out.push_back('J');  //xd
-    truthTable_out.push_back('X');  //xb
+    truthTable_out.push_back('L');  //xb
     truthTable_out.push_back('X');  //xg
     truthTable_out.push_back('J');  //xj
     truthTable_out.push_back('X');  //xf
@@ -229,7 +229,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('G');  //gg
     truthTable_out.push_back('J');  //gj
     truthTable_out.push_back('X');  //gf
-    truthTable_out.push_back('J');  //gl
+    truthTable_out.push_back('L');  //gl
     truthTable_out.push_back('J');  //jj
     truthTable_out.push_back('J');  //jf
     truthTable_out.push_back('1');  //jl
