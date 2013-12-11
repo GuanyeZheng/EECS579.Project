@@ -30,7 +30,7 @@ int TruthTable::setGateType(gateType g_t)
 
 bool TruthTable::setTruthTable_in(){
 	cout << "typeGate: " << typeGate << endl;
-  if (typeGate == NOT || typeGate == BUF || typeGate == PO){
+  if (typeGate == NOT || typeGate == BUF || typeGate == PO ||typeGate == DFF){
     truthTable_in.push_back("0");
     truthTable_in.push_back("1");
     truthTable_in.push_back("X");
@@ -297,7 +297,7 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('L'); //f
     truthTable_out.push_back('F'); //l
   }
-  else if(typeGate == BUF || typeGate == PO)
+  else if(typeGate == BUF || typeGate == PO||typeGate == DFF)
   {
     truthTable_out.push_back('0'); //0
     truthTable_out.push_back('1'); //1

@@ -36,7 +36,8 @@ class Circuit
     Circuit() {};
     
     Circuit(const string &filename,int n)
-    { if (readBLIF(filename,n)) cout << "error in reading " << filename << endl; }
+    { clear(); 
+      if (readBLIF(filename,n)) cout << "error in reading " << filename << endl; }
     
     // destructor
     ~Circuit();

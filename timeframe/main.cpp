@@ -34,6 +34,8 @@ int main(int argc, char **argv)
       {
         string inFilename = string(argv[++i]);
         Circuit c(inFilename,0);
+        //c.readBLIF(inFilename,1);
+
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
         c.print();
