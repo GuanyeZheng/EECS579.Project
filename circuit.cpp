@@ -376,6 +376,14 @@ int Circuit::readBLIF(const string &filename, int n)
       //cout<<"pass here"<<endl;
 			count++;
 			levelNode->c1 = atoi(words[count].c_str());
+
+      if (n == 0)
+      {
+        if (levelNode->gate == DFF)
+        {
+          levelNode->type = PRIMARY_INPUT;
+        }
+      }
     }
       /*
       cout << "Nodes:" << endl;
