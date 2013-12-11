@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#define MAXFRAME 10
+
 void usage(const char* exename);
 
 int main(int argc, char **argv)
@@ -54,10 +56,14 @@ int main(int argc, char **argv)
         Circuit c(inFilename,0);
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
-
-				Node *faulty_node = c.findNode("1");
-				cout << faulty_node->getName() << endl;
-        if (c.podem(faulty_node, '0')) {
+				/*
+				vector<Node*> Nodes = c.getNodes();
+				int framecount;
+				for (int i = 0; i < Nodes.size(); i++) {
+					Node *faulty_node = Nodes[i];
+					framecount = 0;
+					while 
+					if (c.podem(faulty_node, '0')) {
 					cout << "test found" << endl;
 					vector<Node*> test = c.getPIs();
 					for (i = 0; i < test.size(); i++) {
@@ -67,8 +73,30 @@ int main(int argc, char **argv)
 				else {
 					cout << "test failed" << endl;
 				}
+				*/
+				Node* faulty_node = c.findNode();
+				int framecount = 1;
+				bool test_found = false;
+				char fault_val = '0';
+				while (framecount <= MAXFRAME && !test_found) {
+					c.clearsig();
+					c.setfault(faulty_node, fault_val);
+					test_found = c.podem(faulty_node, fault_val);
+					if (test_found) {
+						cout << "test found with " << framecount << " frames" << endl;
+						vector<Node*> test = c.getPIs();
+						for (i = 0; i < test.size(); i++) {
+							cout << "node: " << test[i]->getName() << " = " << test[i]->getValue() << endl;
+						}
+					}
+					else {
+						c.addtimeframe(inFilename, framecount);
+						framecount++;
+					}
+				}
 
-        c.print();
+
+        //c.print();
 
       }
       else
