@@ -74,12 +74,13 @@ int main(int argc, char **argv)
 					cout << "test failed" << endl;
 				}
 				*/
-				Node* faulty_node = c.findNode();
+				Node* faulty_node = c.findNode("1");
 				int framecount = 1;
 				bool test_found = false;
 				char fault_val = '0';
 				while (framecount <= MAXFRAME && !test_found) {
 					c.clearsig();
+					cout << "faulty_node: " << faulty_node->getName() << endl;
 					c.site_fault(faulty_node->getName(), fault_val, framecount);
 					test_found = c.podem(faulty_node, fault_val);
 					if (test_found) {
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
 						}
 					}
 					else {
-						c.addtimeframe(inFilename, framecount);
+						c.add_timeframe(inFilename, framecount);
 						framecount++;
 					}
 				}
