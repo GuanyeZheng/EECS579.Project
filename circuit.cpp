@@ -510,7 +510,7 @@ int Circuit::clearsig()
   {
     if (it->second != NULL) {
       it->second->setValue('X');
-			it->second->faulty = false;
+			it->second->fault_target = false;
 		}
   }
   return 0;
