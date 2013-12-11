@@ -113,8 +113,8 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('F');  //1f
     truthTable_out.push_back('L');  //1l
     truthTable_out.push_back('X');  //xx
-    truthTable_out.push_back('X');  //xd
-    truthTable_out.push_back('X');  //xb
+    truthTable_out.push_back('F');  //xd
+    truthTable_out.push_back('G');  //xb
     truthTable_out.push_back('G');  //xg
     truthTable_out.push_back('X');  //xj
     truthTable_out.push_back('F');  //xf
@@ -129,11 +129,11 @@ bool TruthTable::setTruthTable()
     truthTable_out.push_back('G');  //bg
     truthTable_out.push_back('G');  //bj
     truthTable_out.push_back('0');  //bf
-    truthTable_out.push_back('L');  //bl
+    truthTable_out.push_back('B');  //bl
     truthTable_out.push_back('G');  //gg
     truthTable_out.push_back('G');  //gj
     truthTable_out.push_back('0');  //gf
-    truthTable_out.push_back('F');  //gl
+    truthTable_out.push_back('G');  //gl
     truthTable_out.push_back('J');  //jj
     truthTable_out.push_back('F');  //jf
     truthTable_out.push_back('X');  //jl
