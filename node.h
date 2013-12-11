@@ -11,7 +11,7 @@ using namespace std;
 #include "truthTable.h"
 
 // define node type
-enum nodeType {PRIMARY_INPUT, PRIMARY_OUTPUT, INTERNAL, ZERO_NODE, ONE_NODE};
+enum nodeType {PRIMARY_INPUT, PRIMARY_OUTPUT, INTERNAL, ZERO_NODE, ONE_NODE,PSEUDO_INPUT, PSEUDO_OUTPUT};
 //enum gateType {AND, OR, NOT, NAND, NOR};
 
 // define value type
@@ -25,6 +25,8 @@ class Node
     string name;
     nodeType type;
 		gateType gate;
+
+    int timeframe;//indicates which time frame it belongs to;
     
     int level;
     unsigned int numFanin;
@@ -46,15 +48,11 @@ class Node
 		//bool faulty;
 		//char fault_value;
     
-		bool isbacktracked;
-		vector<Node*> implications;
-		Node* lastdecision;
-
   public:
     // constructors
     Node():type(INTERNAL), value('X') {}
     
-    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X'), isbacktracked(false) {}
+    Node(const string &nodeName):name(nodeName), type(INTERNAL), value('X') {}
     
     // destructor
     ~Node() {};
@@ -113,6 +111,8 @@ class Node
         case INTERNAL      : cout << "INTERNAL";       break;
         case ZERO_NODE     : cout << "ZERO_NODE";      break;
         case ONE_NODE      : cout << "ONE_NODE";       break;
+        case PSEUDO_INPUT  : cout << "PSEUDO_INPUT";   break;
+        case PSEUDO_OUTPUT : cout << "PSEUDO_OUTPUT";  break;
       }
       cout << "] ";
 
@@ -126,6 +126,8 @@ class Node
 				case NOR:		cout << "NOR";	break;
 				case PI:		cout << "PI";		break;
 				case PO:		cout << "PO";		break;
+        case DFF:   cout << "DFF";  break;
+        case BUF:   cout << "BUF";  break;
 			}
 			cout << "]" << endl;
       
