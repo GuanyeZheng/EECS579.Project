@@ -1,5 +1,6 @@
 #include "circuit.h"
 using namespace std;
+
 /******************Circuit Implementation********************/
 
 Circuit::~Circuit()
@@ -28,6 +29,17 @@ vector<Node*> Circuit::getPOs()
   }
   return POs;
 }
+
+vector<Node*> Circuit:getNode()
+{
+  vector<Node*> Nodes;
+  for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
+  {
+    Nodes.push_back(it->second);
+  }
+  return Nodes;
+}
+
 
 int Circuit::setPI(const string &input)
 {
@@ -492,6 +504,18 @@ int Circuit::clear()
   return 0;
 }
 
+int Circuit::clearsig()
+{
+  for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
+  {
+    if (it->second != NULL) {
+      it->second->setValue('X');
+			it->second->faulty = false;
+		}
+  }
+  return 0;
+}
+
 int Circuit::printSortNode()
 {
   topoSort();
@@ -704,7 +728,7 @@ Node* Circuit::backtrace() {
 
 Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
 	if (cur_node->getType() == PRIMARY_INPUT) {
-		if (cur_node != fault.first) {
+		if (!cur_node->faulty) {
 			cur_node->setValue(cur_val);
 		}
 		else {
@@ -786,13 +810,13 @@ void Circuit::imply(Node *cur_node) {
 			char next_node_val = next_node->tt.evaluate(next_node_input);
 			cout << "next_node_val: " << next_node_val << endl;
 			if (next_node_val != 'X') {
-				if (next_node != fault.first) {
+				if (!next_node->faulty) {
 					next_node->setValue(next_node_val);
 					nearest_decision->implications.push_back(next_node);
 					imply(next_node);
 				}
 				else {
-					if (next_node_val == fault.second) {
+					if (next_node_val == next_node->fault_val) {
 						cout << "fault cannot be generated" << endl;
 						cout << "Error!!!" << endl;
 						exit(1);
@@ -887,8 +911,8 @@ bool Circuit::podem(Node *faulty_node, char fault_value) {
 			if (backtrack()) {
 				imply(nearest_decision);
 				if (is_fault_found()) {
-				is_test_found = true;
-				break;
+					is_test_found = true;
+					break;
 				}
 			}
 			else {

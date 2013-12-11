@@ -57,6 +57,10 @@ class Circuit
     // get primary inputs and outputs
     vector<Node*> getPIs();
     vector<Node*> getPOs();
+
+		// get all nodes
+		
+		vector<Node*> getNodes();
     
     // sets the node of <string> as primary input and output
     int setPI(const string &input);
