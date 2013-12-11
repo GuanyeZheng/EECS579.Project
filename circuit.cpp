@@ -88,6 +88,15 @@ Node* Circuit::createNode(const string &nodeName)
   {
     newNode = new Node(nodeName);
     nodeMap.insert(make_pair(nodeName, newNode));
+    newNode->type = INTERNAL;
+    newNode->gate = PI;
+    newNode->timeframe = 0;
+    newNode->level = 0;
+    newNode->numFanin = 0;
+    newNode->numFanout = 0;
+    newNode->obs_value = 0;
+    newNode->c0 = 0;
+    newNode->c1 = 0;
   }
   
   return newNode;
@@ -121,7 +130,32 @@ int Circuit::print()
   return 0;
 }
 
-int Circuit::readBLIF(const string &filename)
+string cal_node_number(int n, int gateNo, string cur_number)
+{
+  int new_node_number = atoi(cur_number.c_str())+n*gateNo;
+  stringstream ss;
+  ss << new_node_number;
+  return ss.str();
+}
+
+string calc_psedo_output_name( int gateNo, string cur_number)
+{
+  int new_node_number = atoi(cur_number.c_str()) - gateNo;
+  stringstream ss;
+  ss << new_node_number;
+  return ss.str();
+}
+string calc_psedo_input_name( int gateNo, string cur_number)
+{
+  int new_node_number = atoi(cur_number.c_str()) + gateNo;
+  stringstream ss;
+  ss << new_node_number;
+  return ss.str();
+}
+
+
+
+int Circuit::readBLIF(const string &filename, int n)
 {
   cout << "reading file " << filename << "..." << endl;
   ifstream inFile(filename.c_str());
@@ -132,19 +166,23 @@ int Circuit::readBLIF(const string &filename)
   }
   
   // clear circuit's contents
-  clear();
+  //clear();
   
   string line;
 
   getline(inFile,line);
   string firstLine, secondLine;
   firstLine = line; 
-  int num_gate = atoi(firstLine.c_str()); //number of gates in the circuit;
+  int num_gate = atoi(firstLine.c_str())-1; //number of gates in the circuit;
   getline(inFile,line); // to pass the second line, which is of no use.
-
+  
+  int count_line = 1;
   //start fetch from the third line;
   while (getline(inFile, line))
   {
+     cout<<count_line<<endl;
+     count_line++;
+
 //    cout << "processing line: " << line << endl;
     stringstream sstr;
     // skip empty lines
@@ -163,21 +201,28 @@ int Circuit::readBLIF(const string &filename)
     // parse non-empty lines only
     if (!words.empty())
     {
+
       //words[0] node name
-      Node* node = findNode(words[0]);
+      //for frame n node_name = words[0]+n*gateNumber;
+      string cur_node_name = cal_node_number(n, num_gate, words[0]);
+      cout<<"cur_node_name:"<<cur_node_name<<endl;
+      Node* node = findNode(cur_node_name);
       Node* levelNode;
       if (node == NULL){
-        levelNode = createNode(words[0]);
+        levelNode = createNode(cur_node_name);
       }
       else {
         levelNode = node; 
       }
+      
+      levelNode->timeframe = n;
+      //cout<<"pass words 0"<<endl;
       //words[1] gate type node type;
       int gateType_value = atoi((words[1].c_str()));
       switch(gateType_value)
       {
-        case 1:		levelNode->gate = PI;		levelNode->tt.typeGate= PI;		break;
-        case 2:		levelNode->gate = PO;		levelNode->tt.typeGate = P0;		break;
+        case 1:		levelNode->gate = PI;		levelNode->tt.typeGate= PI;		  break;
+        case 2:		levelNode->gate = PO;		levelNode->tt.typeGate = PO;		break;
         case 5:   levelNode->gate = DFF;  levelNode->tt.typeGate = DFF;   break;//for dff
         case 6:		levelNode->gate = AND;	levelNode->tt.typeGate = AND;		break;
         case 7:		levelNode->gate = NAND;	levelNode->tt.typeGate = NAND;	break;
@@ -185,84 +230,163 @@ int Circuit::readBLIF(const string &filename)
         case 9:		levelNode->gate = NOR;	levelNode->tt.typeGate = NOR;		break;
         case 10:	levelNode->gate = NOT;	levelNode->tt.typeGate = NOT;		break;
         case 11:  levelNode->gate = BUF;  levelNode->tt.typeGate = BUF;   break;
+
         default : 
             cout << "ERROR: Gate type not recognized" << endl;
       }
-      if (levelNode->gate == PI)
+      if(levelNode->type != PSEUDO_OUTPUT) //if the node is defined as pseudo+output previously
       {
-        levelNode->type = PRIMARY_INPUT;
-				PIs.push_back(levelNode);
+        if (levelNode->gate == PI)
+        {
+          levelNode->type = PRIMARY_INPUT;
+        }
+        else if (levelNode->gate == PO)
+        {
+          levelNode->type = PRIMARY_OUTPUT;
+        }
+        else if (levelNode->gate == DFF)
+        {
+          levelNode->type = PSEUDO_INPUT;
+        }
+        else
+        {
+          levelNode->type = INTERNAL;
+        }
       }
-      else if (levelNode->gate == PO)
-      {
-        levelNode->type = PRIMARY_OUTPUT;
-				POs.push_back(levelNode);
-      }
-      else 
-      {
-        levelNode->type = INTERNAL;
-      }
-
       
+      
+     //cout<<"pass words [1]"<<endl; 
+
       //word[2] level;
       levelNode->level = atoi(words[2].c_str());
       
       //word[3] numFanin;
       levelNode->numFanin =  atoi(words[3].c_str());
-			levelNode->tt.numVars = atoi(words[3].c_str());
-			levelNode->tt.setTruthTable_in();
-			levelNode->tt.setTruthTable();
       //word[4] faninlist...
       int count = 4;
 
       for (unsigned j = 0; j<levelNode->numFanin;++j)
       {
-        Node* node = findNode(words[count+j]);
+        string node_name = cal_node_number(n, num_gate, words[count+j]);
+        node = findNode(node_name);
         Node* node_fanin_c0;
-        if (node == NULL) node_fanin_c0 = createNode(words[count+j]);
+        if (node == NULL) node_fanin_c0 = createNode(node_name);
         else node_fanin_c0 = node;
-        
         levelNode->fanin_c0.push_back(node_fanin_c0);
+        //cout<<cur_node_name <<"'s fanin is "<<node_fanin_c0->name<<endl;
+
       }
       count = count + levelNode->numFanin;//6
 
       //words[4+numFanin]
       for (unsigned k = 0; k < levelNode->numFanin; ++k)
       { 
-        string name = words[count+k];
-        Node* node = findNode(name);
-        Node* node_fanin_c1; 
-        if (node == NULL)node_fanin_c1 = createNode(name);
-        else node_fanin_c1 = node;
-        levelNode->fanin_c1.push_back(node_fanin_c1);
+        string node_name = cal_node_number(n, num_gate, words[count+k]);
+        node = findNode(node_name);
+        //if (node == NULL)node_fanin_c1 = createNode(name);
+        //else
+        levelNode->fanin_c1.push_back(node);
       }
-
+      //if this node is dff, we have to replace it's fanin to previous pseudooutput from last frame; or create a new node if it is the first frame; 
+      if (levelNode->gate == DFF)
+      {
+        (levelNode->fanin_c0.front())->type = PSEUDO_OUTPUT;
+      //  cout<<"fanin to dff = "<<levelNode->fanin_c0.front()->name<<endl;
+        string psedo_out_name =calc_psedo_output_name(num_gate,levelNode->fanin_c0.front()->name); 
+       // cout<<"fanin to dff after cal= "<<psedo_out_name<<endl;
+        node = findNode(psedo_out_name);
+        Node* node_fanin_c0;
+        if (node == NULL)  node_fanin_c0 = createNode(psedo_out_name);
+        else node_fanin_c0 = node;
+        //cout<<"new fanin to dff is "<<node_fanin_c0->name<<endl;
+        node_fanin_c0->type = PSEUDO_OUTPUT;
+        node_fanin_c0->timeframe = n-1;
+        levelNode->fanin_c0.pop_back();
+        levelNode->fanin_c0.push_back(node_fanin_c0);
+       // cout<<"fanin_c0 size = "<<levelNode->fanin_c0.size()<<endl;
+       // cout<<"fanin_c0 front = "<<levelNode->fanin_c0.front()->name<<endl;
+        levelNode->fanin_c1.pop_back();
+        levelNode->fanin_c1.push_back(node_fanin_c0);
+      }    
+     // cout<<"number of fanin"<<levelNode->numFanin<<endl;
       count = count + levelNode->numFanin;//8
       //words[4+numFanin*2]
+      //cout<<"count = "<<count<<endl;
       levelNode->numFanout =  atoi(words[count].c_str());
+     // cout<<cur_node_name<<"'s number_of_fanout = "<<levelNode->numFanout<<endl;
       count++;//9
       //words[4+numFanin*2+1,4+numFanin*2+1+numFanout];
       for (unsigned l = 0; l < levelNode->numFanout; ++l)
       {
-        string name = words[count+l];
-        Node *node = findNode(name);
+       // cout<<l<<endl;  
+        string words_l = words[count+l];
+        string node_name = cal_node_number(n,num_gate, words_l);
+      //  cout<<cur_node_name<<"'s fanout l"<<l<<" is"<< node_name<<endl;
+        node = findNode(node_name);
         Node * node_fanout;
-        if (node == NULL) node_fanout = createNode(name);
+        if (node == NULL) node_fanout = createNode(node_name);
         else node_fanout = node;
         levelNode->fanout.push_back(node_fanout);
       }
+      
+      if (levelNode->type == PSEUDO_OUTPUT)
+      {
+        //cout<<"leveNode is a pseudo_output"<<endl;
+        for (unsigned l = 0; l < levelNode->numFanout; ++l)
+        {
+          
+
+          if(levelNode->fanout[l]->gate == DFF)
+          {
+            //cout<<"levelnode fanout [l] "<<l<< "'s gate is a dff"<<endl;
+            string fout_name = levelNode->fanout[l]->name;
+            string node_name = calc_psedo_input_name(num_gate,fout_name);
+            //cout<<"this fantou l replaced" <<fout_name<<" by<<"<<node_name<<endl;
+            node = findNode(node_name);
+            Node * node_fanout;
+            if (node == NULL) node_fanout = createNode(node_name);
+            else node_fanout = node;
+            //node_fanout->fanin_c0.push_back(levelNode);
+            node_fanout->type = PSEUDO_INPUT;
+            //node_fanout->level = levelNode->fanout[l]->level;
+            node_fanout->gate = DFF;
+            //node_fanout->numFanin =1;
+            //node_fanout->fanin_c0.push_back(levelNode);
+            //node_fanout->c0 = 0;
+            //node_fanout->c1 = 0;
+            //node_fanout->obs_value = 0;
+            //node_fanout->fanin_c1.push_back(levelNode);
+            //node_fanout->numFanout = 0;
+            //node_fanout->timeframe = n+1;
+            levelNode->fanout[l]=(node_fanout);
+          }
+        }
+
+      }
+      //cout<<"pass fanout"<<endl;
+
       count = count + levelNode->numFanout;//11
       
       //words[count] oberservabitlity
       levelNode->obs_value = atoi(words[count].c_str());
-      count = count + 2;//13
+      count = count + 2;//13a
+      
 			levelNode->c0 = atoi(words[count].c_str());
+      //cout<<"pass here"<<endl;
 			count++;
 			levelNode->c1 = atoi(words[count].c_str());
     }
+      /*
+      cout << "Nodes:" << endl;
+      for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
+      {
+        it->second->print();
+        cout << endl;
+      } */
   }
-  
-  cout << "file " << filename << " successfully read." << endl;
+
+  cout << "file " << filename << " successflly read." << endl;
+  //cout<<" find node 3"<<findNode("3")->name;
   inFile.close();
   return 0;
 }
@@ -356,17 +480,6 @@ int Circuit::clear()
   nodeMap.clear();
   return 0;
 }
-
-int Circuit::clearsig()
-{
-  for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
-  {
-    if (it->second != NULL)
-      it->second->setValue('X');
-  }
-  return 0;
-}
-
 
 int Circuit::printSortNode()
 {
@@ -498,107 +611,71 @@ char Circuit::computeNode(Node* node)
   //}
   return node->getValue();
 }
-
+/*
 bool Circuit::objective() {
 	// if fault location unassigned
 	if (fault.first->getValue() == 'X') {
-		cur_obj = make_pair(fault.first, invert_val(fault.second));
+		cur_obj = fault;
 		cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;
 		return true;
 	}
-	bool is_d_frontier = false;	
+	
 	//TODO: recheck the logic here, especially for the NOT gate
-	//TODO: choose d_frontier according to level
-	//TODO: the way I move out d_frontiers can be improved
-	for (mapIter it = d_frontier.begin(); it != d_frontier.end(); it++) {
-		is_d_frontier = false;
-		cout << "looking for d_frontiers" << endl;
-		Node *d_front = it->second;
+	for (int i = 0; i < d_frontier.size(); i++) {
+		Node *d_front = d_frontier[i];
 		for (int j = 0; j < d_front->getFanout().size(); j++) {
-			cout << "checkpoint1" << endl;
 			Node *prop_gate = d_front->getFanout()[j];
-			if (prop_gate->getValue() == 'X' || prop_gate->getValue() == 'G' || prop_gate->getValue() == 'J' || prop_gate->getValue() == 'F' || prop_gate->getValue() == 'L') {
-				cout << "checkpoint2" << endl;
-				is_d_frontier = true;
+			if (prop_gate->getValue() == 'X') {
 				for (int k = 0; k < prop_gate->getFanin().size(); k++) {
-					cout << "checkpoint3" << endl;
 					Node *obj_sig = prop_gate->getFanin()[k];
-					cout << obj_sig->getValue() << endl;
 					if (obj_sig->getValue() == 'X') {
-						cout << "checkpoint4" << endl;
-						cur_obj = make_pair(obj_sig, prop_gate->non_ctr_val());
+						cur_obj = (obj_sig, prop_gate->non_ctr_val());
 						cout << "cur_obj = <" << cur_obj.first->getName() << ", " << cur_obj.second << ">" << endl;    
 						return true;
 					}
 				}
 			}
 		}
-		if (!is_d_frontier) {
-			d_frontier.erase(d_front->getName());
-		}
 	}
 
 	return false;
 }
-
-
-Node* Circuit::backtrace() {
+*/
+/*
+Node* backtrace() {
 	return backtrace_help(cur_obj.first, cur_obj.second);
 }
 
-Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
+Node* backtrace_help(Node *cur_node, char cur_val) {
 	if (cur_node->getType() == PRIMARY_INPUT) {
-		if (cur_node != fault.first) {
-			cur_node->setValue(cur_val);
-		}
-		else {
-			if (cur_val == '0') {
-				cur_node->setValue('B');
-				if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
-					d_frontier[cur_node->getName()] = cur_node;
-				}
-			}
-			else if (cur_val == '1') {
-				cur_node->setValue('D');
-				if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
-					d_frontier[cur_node->getName()] = cur_node;
-				}
-			}
-			else { 
-				cout << "error in backtrace helper" << endl;
-			}
-		}
-		cur_node->lastdecision = nearest_decision;
-		nearest_decision = cur_node;
-		cout << "current decision: " << nearest_decision->getName() << " = " << cur_node->getValue() << endl;
+		cur_node->setValue(cur_val);
 		return cur_node;
 	}
 	else {
 		char next_val;
 		gateType cur_gate = cur_node->getGateType();
 		//if G is NOR/NOT/NAND, value is opposite
-		if (cur_gate == AND || cur_gate == OR || cur_gate == BUF || cur_gate == PO) {
+		if (cur_gate == AND || cur_gate == OR) {
 			next_val = cur_val;
 		}
 		else {
-			cout << "inverval?" << endl;
 			next_val = invert_val(cur_val);
 		}
 		//find an unassigned input, here I ignore controllbility mentioned
 		//in the paper, should be fine, correct?
 		//TODO: .lev file has controllability value which can be used
-		for (int i = 0; i < cur_node->getFanin().size(); i++) {
-			Node *next_node = cur_node->getFanin()[i];
-			if (next_node->getValue() == 'X') {				
+		for (int i = 0; i < cur_node->getFanin.size(); i++) {
+			Node *next_node = cur_node->getFanin[k];
+			if (next_node->getValue == 'X') {				
 				return backtrace_help(next_node, next_val);
 			}
 		}
 		//Assume the for loop above must find one unassigned input, or this node		//will not be selected, correct?
 	}
-	return NULL;
+	return nullptr;
 }
 
-char Circuit::invert_val(char val) {
+char invert_val(char val) {
 	char inv_val;
 	switch(val) {
 		case	'0'	: inv_val = '1';	break;
@@ -615,136 +692,31 @@ char Circuit::invert_val(char val) {
 	return inv_val;
 }
 
-void Circuit::imply(Node *cur_node) {
+void Imply(Node *cur_node) {
 	//assume new value of a node will not lead a contradiction when imply
 	//correct?
 	Node *next_node;
 	vector<Node*> fanout = cur_node->getFanout();
 	int fanout_size = fanout.size();
-	bool is_d_frontier = false;
 	for (int i = 0; i < fanout_size; i++) {
 		next_node = fanout[i];
-		if (next_node->getValue() == 'X' || next_node->getValue() == 'G' || next_node->getValue() == 'J' || next_node->getValue() == 'F' || next_node->getValue() == 'L') {
+		if (next_node->getValue() == 'X') {
 			string next_node_input = next_node->getInput();
-			cout << "next_node_input: " << next_node_input << endl;
-			char next_node_val = next_node->tt.evaluate(next_node_input);
-			cout << "next_node_val: " << next_node_val << endl;
+			char next_node_val = next_node->tt.evaluate(&next_node_input);
 			if (next_node_val != 'X') {
-				if (next_node != fault.first) {
-					next_node->setValue(next_node_val);
-					nearest_decision->implications.push_back(next_node);
-					imply(next_node);
-				}
-				else {
-					if (next_node_val == fault.second) {
-						cout << "fault cannot be generated" << endl;
-						cout << "Error!!!" << endl;
-						exit(1);
-					}
-					else {
-						cout << "here?" << endl;
-						cout << next_node_val << endl;
-						if (next_node_val == '1') {
-							next_node->setValue('D');
-							nearest_decision->implications.push_back(next_node);
-							imply(next_node);
-						}
-						else if (next_node_val == '0') {
-							next_node->setValue('B');
-							nearest_decision->implications.push_back(next_node);
-							imply(next_node);
-						}
-						else {
-							cout << "Error!!!" << endl;
-							exit(1);
-						}
-					}
-				}
-			} // if (next_node_val != 'X') 
-			else {
-				//TODO: may add additional d_frontiers, but should be fine, check!!!
-				is_d_frontier = true;
+				next_node->setValue(next_node_val);
+				Imply(next_node);
 			}
-				
-		}
-	}
-	if (is_d_frontier && (cur_node->getValue() == 'D' || cur_node->getValue() == 'B')) {
-		if (d_frontier.find(cur_node->getName()) == d_frontier.end()) {
-			d_frontier[cur_node->getName()] = cur_node;
 		}
 	}
 }
 
-bool Circuit::is_fault_found() {
-  for (unsigned i = 0; i < POs.size(); i++)
-  {
-    if (POs[i]->value == 'D' || POs[i]->value == 'B') {
-      return true;
-		}
-  }
-	return false;
+*/
+
+int Circuit::add_timeframe(const string &filename,int n) //n:frame number;
+{
+  return readBLIF(filename,n);
 }
-
-bool Circuit::backtrack() {
-	bool success = false;
-	while (1) {
-		unsigned numimplications = nearest_decision->implications.size();
-		for (unsigned i = 0; i < numimplications; i++) {
-			nearest_decision->implications[i]->value == 'X';
-		}
-		nearest_decision->implications.clear();
-		if (nearest_decision->isbacktracked) {
-			if (nearest_decision->lastdecision != NULL) {
-				nearest_decision = nearest_decision->lastdecision;
-				continue;
-			}
-			else {
-				break;
-			}
-		}
-		else {
-			nearest_decision->value == invert_val(nearest_decision->value);
-			nearest_decision->isbacktracked = true;
-			success = true;
-			break;
-		}
-	}
-	return success;
-}
-	
-
-bool Circuit::podem(Node *faulty_node, char fault_value) {
-	bool is_test_found = false;
-	//clearall
-	fault = make_pair(faulty_node, fault_value);
-	cout << "fault = <" << faulty_node->getName() << ", " << fault_value << ">" << endl; 
-	while (1) {
-		if(objective()) {
-			Node* decision_node = backtrace();
-			imply(decision_node);
-			if (is_fault_found()) {
-				is_test_found = true;
-				break;
-			}
-		}
-		else {
-			if (backtrack()) {
-				imply(nearest_decision);
-				if (is_fault_found()) {
-				is_test_found = true;
-				break;
-				}
-			}
-			else {
-				break;
-			}
-		}
-	}
-	return is_test_found;
-}
-			
-
-
 
 
 

@@ -21,13 +21,21 @@ int main(int argc, char **argv)
     {
       usage(argv[0]);
     }
-    
+    /*else if (argv[i] == string("-buildsc"))
+    {
+      if (i + 1 < argc)
+      {
+        string inFilename = string(argvp
+      }
+    }*/
     else if (argv[i] == string("-build"))
     {
       if (i + 1 < argc)
       {
         string inFilename = string(argv[++i]);
-        Circuit c(inFilename);
+        Circuit c(inFilename,0);
+        //c.readBLIF(inFilename,1);
+
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
         c.print();
@@ -43,21 +51,10 @@ int main(int argc, char **argv)
       if (i + 1 < argc)
       {
         string inFilename = string(argv[++i]);
-        Circuit c(inFilename);
+        Circuit c(inFilename,0);
         // your code here
         // print the result of topologically sorted nodes of the circuit, support functions implemented in circuit.cpp
-				Node *faulty_node = c.getPIs()[0];
-				cout << faulty_node->getName() << endl;
-        if (c.podem(faulty_node, '0')) {
-					cout << "test found" << endl;
-					vector<Node*> test = c.getPIs();
-					for (i = 0; i < test.size(); i++) {
-						cout << "node: " << test[i]->getName() << " = " << test[i]->getValue() << endl;
-					}
-				}
-				else {
-					cout << "test failed" << endl;
-				}
+        c.print();
       }
       else
       {
@@ -70,7 +67,7 @@ int main(int argc, char **argv)
       if (i + 2 < argc)
       {
         string inFilename = string(argv[++i]);
-        Circuit c(inFilename);
+        Circuit c(inFilename,0);
         string inputFile = string(argv[++i]);
         // your code here
         // support functions implemented in circuit.cpp and truthtable.cpp

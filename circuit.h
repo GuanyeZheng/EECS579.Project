@@ -28,17 +28,16 @@ class Circuit
     vector<Node*> sortNode;
 		pair<Node*, char> fault;
 		pair<Node*, char> cur_obj;
-		Node* nearest_decision;
-    map<string, Node*> d_frontier;
-		vector<Node*> PIs;
-		vector<Node*> POs;
-
+    vector<Node*> d_frontier;
+    
+    vector<Node*> dff_node; //map of dff;
   public:
     // constructors
     Circuit() {};
     
-    Circuit(const string &filename): nearest_decision(NULL)
-    { if (readBLIF(filename)) cout << "error in reading " << filename << endl; }
+    Circuit(const string &filename,int n)
+    { clear(); 
+      if (readBLIF(filename,n)) cout << "error in reading " << filename << endl; }
     
     // destructor
     ~Circuit();
@@ -73,16 +72,13 @@ class Circuit
     int print();
     
     // reads in circuit from BLIF format
-    int readBLIF(const string &filename);
+    int readBLIF(const string &filename,int n);//n->framenumber;
     
     // writes circuit in BLIF format
     int writeBLIF(const string &filename);
     
     // erases the contents of the entire circuit
     int clear();
-
-		// erases the signals of the entire circuit
-		int clearsig();
 
     // print the topologically sorted nodes of the circuit
     int printSortNode();    
@@ -116,13 +112,10 @@ class Circuit
 		char invert_val(char val);
 
 		// add for 579
-		void imply(Node *cur_node);	
-		
-		bool is_fault_found();
+		void Imply(Node *cur_node);	
 
-		bool backtrack(); 
-
-		bool podem(Node *faulty_node, char fault_value);
+    // expand one timeframe forward;
+    int add_timeframe(const string &filename, int n);  
 };
 
 #endif
