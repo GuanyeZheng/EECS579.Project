@@ -664,7 +664,7 @@ int Circuit::site_fault(string node_name, char stuck_value, int cur_frame)
   {
     for (int i = 0; i <cur_frame;++i)
     {
-        string node_name = cal_node_number(cur_frame,circuitGate, node_name);
+        string node_name = cal_node_number(i,circuitGate, node_name);
         node = findNode(node_name);
         if (node == NULL)
         {
