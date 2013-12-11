@@ -30,7 +30,7 @@ vector<Node*> Circuit::getPOs()
   return POs;
 }
 
-vector<Node*> Circuit:getNode()
+vector<Node*> Circuit::getNodes()
 {
   vector<Node*> Nodes;
   for (mapIter it = nodeMap.begin(); it != nodeMap.end(); it++)
@@ -728,7 +728,7 @@ Node* Circuit::backtrace() {
 
 Node* Circuit::backtrace_help(Node *cur_node, char cur_val) {
 	if (cur_node->getType() == PRIMARY_INPUT) {
-		if (!cur_node->faulty) {
+		if (!cur_node->fault_target) {
 			cur_node->setValue(cur_val);
 		}
 		else {
@@ -810,13 +810,13 @@ void Circuit::imply(Node *cur_node) {
 			char next_node_val = next_node->tt.evaluate(next_node_input);
 			cout << "next_node_val: " << next_node_val << endl;
 			if (next_node_val != 'X') {
-				if (!next_node->faulty) {
+				if (!next_node->fault_target) {
 					next_node->setValue(next_node_val);
 					nearest_decision->implications.push_back(next_node);
 					imply(next_node);
 				}
 				else {
-					if (next_node_val == next_node->fault_val) {
+					if (next_node_val == next_node->sal_value) {
 						cout << "fault cannot be generated" << endl;
 						cout << "Error!!!" << endl;
 						exit(1);
